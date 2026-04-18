@@ -1,0 +1,21 @@
+[Unit]
+Description=Patakus Web (Next.js)
+After=network.target patakus-api.service
+Wants=patakus-api.service
+
+[Service]
+Type=simple
+User=jorge
+WorkingDirectory=/home/jorge/patakus/apps/web
+ExecStart=/usr/bin/node .next/standalone/server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=patakus-web
+Environment=PORT=3000
+Environment=HOSTNAME=0.0.0.0
+EnvironmentFile=/home/jorge/patakus/apps/web/.env.local
+
+[Install]
+WantedBy=multi-user.target

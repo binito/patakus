@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { HigienizacaoZona } from '@prisma/client';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { HigienizacaoZona, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthUser } from '../common/types/auth-user.type';
 import { buildDateRange } from '../common/utils/date-range.util';
 import { CreateHigienizacaoDto } from './dto/create-higienizacao.dto';
 
@@ -29,20 +30,26 @@ export class HigienizacaoService {
       ...(zona ? { zona: zona as HigienizacaoZona } : {}),
       ...(dateRange ? { dia: dateRange } : {}),
     };
+    const safeLimit = Math.min(limit, 200);
     const [data, total] = await this.prisma.$transaction([
       this.prisma.higienizacaoRecord.findMany({
         where,
         orderBy: { dia: 'desc' },
         include: { operator: { select: { id: true, name: true } } },
-        skip: (page - 1) * limit,
-        take: limit,
+        skip: (page - 1) * safeLimit,
+        take: safeLimit,
       }),
       this.prisma.higienizacaoRecord.count({ where }),
     ]);
-    return { data, total, page, limit };
+    return { data, total, page, limit: safeLimit };
   }
 
-  async remove(id: string) {
+  async remove(id: string, actor: AuthUser) {
+    const rec = await this.prisma.higienizacaoRecord.findUnique({ where: { id }, select: { clientId: true } });
+    if (!rec) throw new NotFoundException('Registo não encontrado');
+    if (actor.role !== Role.SUPER_ADMIN && rec.clientId !== actor.clientId) {
+      throw new ForbiddenException('Acesso negado a este registo');
+    }
     return this.prisma.higienizacaoRecord.delete({ where: { id } });
   }
 }

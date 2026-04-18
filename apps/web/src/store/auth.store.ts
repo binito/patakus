@@ -8,7 +8,7 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (user: User) => void;
   logout: () => void;
-  hydrate: () => void;
+  hydrate: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -33,10 +33,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  hydrate: () => {
-    const user = getUser();
-    if (user) {
-      set({ user, isAuthenticated: true });
+  hydrate: async () => {
+    const cached = getUser();
+    if (!cached) return;
+    set({ user: cached, isAuthenticated: true });
+    try {
+      const res = await api.get<User>('/auth/me');
+      setUser(res.data);
+      set({ user: res.data, isAuthenticated: true });
+    } catch {
+      clearAuth();
+      set({ user: null, isAuthenticated: false });
     }
   },
 }));

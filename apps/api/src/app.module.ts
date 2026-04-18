@@ -1,6 +1,7 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { PrismaModule } from './prisma/prisma.module';
@@ -25,7 +26,7 @@ import { OleosModule } from './oleos/oleos.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({
@@ -67,6 +68,9 @@ import { OleosModule } from './oleos/oleos.module';
     HigienizacaoModule,
     DesinfecaoModule,
     OleosModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule implements NestModule {

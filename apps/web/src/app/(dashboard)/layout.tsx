@@ -12,8 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    hydrate();
-    setHydrated(true);
+    void hydrate().finally(() => setHydrated(true));
   }, [hydrate]);
 
   useEffect(() => {

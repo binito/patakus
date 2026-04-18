@@ -1,18 +1,11 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { Role, OrderStatus } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { AuthUser } from '../common/types/auth-user.type';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrdersService } from './orders.service';
 
@@ -21,47 +14,40 @@ import { OrdersService } from './orders.service';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  // SUPER_ADMIN e CLIENT_ADMIN podem criar encomendas
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Post()
-  create(@Body() dto: CreateOrderDto, @CurrentUser() user: any) {
-    // CLIENT_ADMIN usa sempre o seu próprio clientId
-    if (user.role === Role.CLIENT_ADMIN) {
-      dto.clientId = user.clientId;
-    }
-    return this.ordersService.create(dto);
+  create(@Body() dto: CreateOrderDto, @CurrentUser() user: AuthUser) {
+    return this.ordersService.create(dto, user);
   }
 
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Get()
-  findAll(@Query('clientId') clientId: string, @CurrentUser() user: any) {
-    const cId =
-      user.role === Role.CLIENT_ADMIN ? user.clientId : clientId;
-    return this.ordersService.findAll(cId);
+  findAll(@TenantId() clientId: string, @CurrentUser() user: AuthUser) {
+    return this.ordersService.findAll(
+      user.role === Role.SUPER_ADMIN ? (clientId || undefined) : clientId,
+    );
   }
 
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Get('suggestions')
-  getSuggestions(@Query('clientId') clientId: string, @CurrentUser() user: any) {
-    const cId =
-      user.role === Role.CLIENT_ADMIN ? user.clientId : clientId;
-    return this.ordersService.getSuggestions(cId);
+  getSuggestions(@TenantId() clientId: string) {
+    return this.ordersService.getSuggestions(clientId);
   }
 
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.ordersService.findOne(id, user);
   }
 
-  // Atualizar estado da encomenda (ex: CONFIRMED, DELIVERED, CANCELLED)
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,
     @Body('status') status: OrderStatus,
     @Body('deliveredAt') deliveredAt: Date,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.ordersService.updateStatus(id, status, deliveredAt);
+    return this.ordersService.updateStatus(id, status, deliveredAt, user);
   }
 }

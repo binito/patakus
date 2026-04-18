@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MinLength,
 } from 'class-validator';
 import { Role } from '@prisma/client';
@@ -17,7 +18,8 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(8, { message: 'A password deve ter pelo menos 8 caracteres' })
+  @Matches(/(?=.*[A-Za-z])(?=.*\d)/, { message: 'A password deve conter pelo menos uma letra e um número' })
   password: string;
 
   @IsEnum(Role)

@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ConsumableStatus } from '@prisma/client';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConsumableStatus, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthUser } from '../common/types/auth-user.type';
+import { assertOwnership } from '../common/utils/tenant.util';
 import { CreateConsumableReportDto } from './dto/create-consumable-report.dto';
 
 @Injectable()
@@ -26,8 +28,11 @@ export class ConsumablesService {
     });
   }
 
-  async removeStock(id: string) {
-    // Remover relatórios de falta associados primeiro
+  async removeStock(id: string, actor: AuthUser) {
+    const stock = await this.prisma.consumableStock.findUnique({ where: { id }, select: { clientId: true } });
+    if (!stock) throw new NotFoundException('Stock não encontrado');
+    assertOwnership(actor, stock.clientId);
+
     await this.prisma.consumableReport.deleteMany({ where: { stockId: id } });
     await this.prisma.consumableStock.delete({ where: { id } });
     return { deleted: true };
@@ -45,20 +50,13 @@ export class ConsumablesService {
 
   // ── Reportes de Escassez ───────────────────────────────────────────────────
 
-  async createReport(dto: CreateConsumableReportDto, reporterId: string) {
-    // Verificar se o stock existe
-    const stock = await this.prisma.consumableStock.findUnique({
-      where: { id: dto.stockId },
-    });
+  async createReport(dto: CreateConsumableReportDto, reporterId: string, actor: AuthUser) {
+    const stock = await this.prisma.consumableStock.findUnique({ where: { id: dto.stockId }, select: { id: true, clientId: true } });
     if (!stock) throw new NotFoundException('Stock não encontrado');
+    assertOwnership(actor, stock.clientId);
 
     return this.prisma.consumableReport.create({
-      data: {
-        stockId: dto.stockId,
-        quantity: dto.quantity,
-        notes: dto.notes,
-        reporterId,
-      },
+      data: { stockId: dto.stockId, quantity: dto.quantity, notes: dto.notes, reporterId },
       include: { stock: { include: { product: true } } },
     });
   }
@@ -71,14 +69,19 @@ export class ConsumablesService {
         reporter: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
+      take: 200,
     });
   }
 
-  async updateReportStatus(id: string, status: ConsumableStatus) {
-    return this.prisma.consumableReport.update({
+  async updateReportStatus(id: string, status: ConsumableStatus, actor: AuthUser) {
+    const report = await this.prisma.consumableReport.findUnique({
       where: { id },
-      data: { status },
+      select: { stock: { select: { clientId: true } } },
     });
+    if (!report) throw new NotFoundException('Relatório não encontrado');
+    assertOwnership(actor, report.stock.clientId);
+
+    return this.prisma.consumableReport.update({ where: { id }, data: { status } });
   }
 
   async getLowStockAlerts(clientId: string) {

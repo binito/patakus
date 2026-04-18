@@ -1,12 +1,18 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthUser } from '../common/types/auth-user.type';
+import { assertOwnership } from '../common/utils/tenant.util';
 import { CreateAreaDto } from './dto/create-area.dto';
 
 @Injectable()
 export class AreasService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateAreaDto) {
+  async create(dto: CreateAreaDto, actor: AuthUser) {
+    if (actor.role === Role.CLIENT_ADMIN) {
+      dto.clientId = actor.clientId!;
+    }
     return this.prisma.area.create({ data: dto });
   }
 
@@ -17,22 +23,23 @@ export class AreasService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor?: AuthUser) {
     const area = await this.prisma.area.findUnique({
       where: { id },
       include: { checklistTemplates: true },
     });
     if (!area) throw new NotFoundException('Área não encontrada');
+    if (actor) assertOwnership(actor, area.clientId);
     return area;
   }
 
-  async update(id: string, data: Partial<CreateAreaDto>) {
-    await this.findOne(id);
+  async update(id: string, data: Partial<CreateAreaDto>, actor: AuthUser) {
+    await this.findOne(id, actor);
     return this.prisma.area.update({ where: { id }, data });
   }
 
-  async deactivate(id: string) {
-    await this.findOne(id);
+  async deactivate(id: string, actor: AuthUser) {
+    await this.findOne(id, actor);
     return this.prisma.area.update({
       where: { id },
       data: { active: false },
@@ -40,8 +47,8 @@ export class AreasService {
     });
   }
 
-  async delete(id: string) {
-    await this.findOne(id);
+  async delete(id: string, actor: AuthUser) {
+    await this.findOne(id, actor);
 
     const [entries, anomalies] = await Promise.all([
       this.prisma.checklistEntry.count({ where: { areaId: id } }),

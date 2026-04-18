@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthUser } from '../common/types/auth-user.type';
 import { buildDateRange } from '../common/utils/date-range.util';
 import { CreateOleoDto } from './dto/create-oleo.dto';
 
@@ -20,20 +22,26 @@ export class OleosService {
       ...(clientId ? { clientId } : {}),
       ...(dateRange ? { data: dateRange } : {}),
     };
+    const safeLimit = Math.min(limit, 200);
     const [data, total] = await this.prisma.$transaction([
       this.prisma.oleoFrituraRecord.findMany({
         where,
         orderBy: { data: 'desc' },
         include: { responsavel: { select: { id: true, name: true } } },
-        skip: (page - 1) * limit,
-        take: limit,
+        skip: (page - 1) * safeLimit,
+        take: safeLimit,
       }),
       this.prisma.oleoFrituraRecord.count({ where }),
     ]);
-    return { data, total, page, limit };
+    return { data, total, page, limit: safeLimit };
   }
 
-  async remove(id: string) {
+  async remove(id: string, actor: AuthUser) {
+    const rec = await this.prisma.oleoFrituraRecord.findUnique({ where: { id }, select: { clientId: true } });
+    if (!rec) throw new NotFoundException('Registo não encontrado');
+    if (actor.role !== Role.SUPER_ADMIN && rec.clientId !== actor.clientId) {
+      throw new ForbiddenException('Acesso negado a este registo');
+    }
     return this.prisma.oleoFrituraRecord.delete({ where: { id } });
   }
 }

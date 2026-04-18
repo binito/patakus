@@ -1,0 +1,20 @@
+[Unit]
+Description=Patakus API (NestJS)
+After=network.target mariadb.service
+Wants=mariadb.service
+
+[Service]
+Type=simple
+User=jorge
+WorkingDirectory=/home/jorge/patakus/apps/api
+ExecStartPre=/usr/bin/npx prisma migrate deploy
+ExecStart=/usr/bin/node dist/main.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=patakus-api
+EnvironmentFile=/home/jorge/patakus/apps/api/.env
+
+[Install]
+WantedBy=multi-user.target

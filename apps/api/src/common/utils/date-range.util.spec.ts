@@ -17,10 +17,10 @@ describe('buildDateRange', () => {
     const result = buildDateRange(undefined, '2026-01-31');
     expect(result).toBeDefined();
     const end = result!.lte as Date;
-    expect(end.getHours()).toBe(23);
-    expect(end.getMinutes()).toBe(59);
-    expect(end.getSeconds()).toBe(59);
-    expect(end.getMilliseconds()).toBe(999);
+    expect(end.getUTCHours()).toBe(23);
+    expect(end.getUTCMinutes()).toBe(59);
+    expect(end.getUTCSeconds()).toBe(59);
+    expect(end.getUTCMilliseconds()).toBe(999);
   });
 
   it('define gte e lte quando ambas as datas são fornecidas', () => {
@@ -33,6 +33,6 @@ describe('buildDateRange', () => {
     const result = buildDateRange('2026-06-01', '2026-06-15');
     const lte = result!.lte as Date;
     expect(lte.toISOString()).toContain('2026-06-15');
-    expect(lte.getHours()).toBe(23);
+    expect(lte.getUTCHours()).toBe(23);
   });
 });

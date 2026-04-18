@@ -11,9 +11,11 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { AuthUser } from '../common/types/auth-user.type';
 import { ChecklistsService } from './checklists.service';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { SubmitChecklistDto } from './dto/submit-checklist.dto';
@@ -25,58 +27,59 @@ export class ChecklistsController {
 
   // ── Templates ──────────────────────────────────────────────────────────────
 
-  // Apenas SUPER_ADMIN e CLIENT_ADMIN criam templates
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Post('templates')
-  createTemplate(@Body() dto: CreateTemplateDto) {
-    return this.checklistsService.createTemplate(dto);
+  createTemplate(@Body() dto: CreateTemplateDto, @CurrentUser() user: AuthUser) {
+    return this.checklistsService.createTemplate(dto, user);
   }
 
-  // Todos os papéis podem consultar templates (necessário para o OPERATOR submeter)
   @Get('templates')
-  findAllTemplates(@Query('areaId') areaId: string, @CurrentUser() user: any) {
-    const clientId = user.role === Role.SUPER_ADMIN ? undefined : user.clientId;
-    return this.checklistsService.findAllTemplates(areaId, clientId);
+  findAllTemplates(
+    @Query('areaId') areaId: string,
+    @TenantId() clientId: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.checklistsService.findAllTemplates(areaId, user.role === Role.SUPER_ADMIN ? undefined : clientId);
   }
 
   @Get('templates/:id')
-  findOneTemplate(@Param('id') id: string) {
-    return this.checklistsService.findOneTemplate(id);
+  findOneTemplate(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.checklistsService.findOneTemplate(id, user);
   }
 
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Patch('templates/:id')
-  updateTemplate(@Param('id') id: string, @Body() dto: any) {
-    return this.checklistsService.updateTemplate(id, dto);
+  updateTemplate(@Param('id') id: string, @Body() dto: Partial<CreateTemplateDto>, @CurrentUser() user: AuthUser) {
+    return this.checklistsService.updateTemplate(id, dto, user);
   }
 
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Delete('templates/:id')
-  deleteTemplate(@Param('id') id: string) {
-    return this.checklistsService.deleteTemplate(id);
+  deleteTemplate(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.checklistsService.deleteTemplate(id, user);
   }
 
   // ── Submissões ─────────────────────────────────────────────────────────────
 
-  // Todos os papéis podem submeter (OPERATOR é o caso principal)
   @Post('submit')
-  submitChecklist(
-    @Body() dto: SubmitChecklistDto,
-    @CurrentUser() user: any,
-  ) {
-    return this.checklistsService.submitChecklist(dto, user.id);
+  submitChecklist(@Body() dto: SubmitChecklistDto, @CurrentUser() user: AuthUser) {
+    return this.checklistsService.submitChecklist(dto, user.id, user);
   }
 
-  // Listagem de entradas: SUPER_ADMIN vê tudo, os outros filtram pelo seu cliente
   @Get('entries')
-  findEntries(@Query('clientId') clientId: string, @Query('areaId') areaId: string, @CurrentUser() user: any) {
-    const cId =
-      user.role === Role.SUPER_ADMIN ? clientId : user.clientId;
-    return this.checklistsService.findEntries(cId, areaId);
+  findEntries(
+    @Query('areaId') areaId: string,
+    @TenantId() clientId: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.checklistsService.findEntries(
+      user.role === Role.SUPER_ADMIN ? (clientId || undefined) : clientId,
+      areaId,
+    );
   }
 
   @Get('entries/:id')
-  findOneEntry(@Param('id') id: string) {
-    return this.checklistsService.findOneEntry(id);
+  findOneEntry(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.checklistsService.findOneEntry(id, user);
   }
 }

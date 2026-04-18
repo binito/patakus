@@ -40,6 +40,7 @@ model User {
   desinfecaoRecords DesinfecaoRecord[]
   oleoFrituraRecords OleoFrituraRecord[]
 
+  @@index([clientId])
   @@map("users")
 }
 
@@ -91,6 +92,7 @@ model Area {
   checklistEntries   ChecklistEntry[]
   anomalyReports     AnomalyReport[]
 
+  @@index([clientId])
   @@map("areas")
 }
 
@@ -202,6 +204,8 @@ model AnomalyReport {
 
   photos       AnomalyPhoto[]
 
+  @@index([status])
+  @@index([areaId, createdAt])
   @@map("anomaly_reports")
 }
 
@@ -246,6 +250,7 @@ model TemperatureEquipment {
 
   records   TemperatureRecord[]
 
+  @@index([clientId, active])
   @@map("temperature_equipment")
 }
 
@@ -303,6 +308,7 @@ model ConsumableStock {
   consumableReports ConsumableReport[]
 
   @@unique([clientId, productId])
+  @@index([clientId])
   @@map("consumable_stocks")
 }
 
@@ -330,6 +336,8 @@ model ConsumableReport {
   reporter     User             @relation(fields: [reporterId], references: [id])
   reporterId   String
 
+  @@index([stockId, createdAt])
+  @@index([status])
   @@map("consumable_reports")
 }
 
@@ -377,6 +385,7 @@ model Order {
 
   items        OrderItem[]
 
+  @@index([clientId, createdAt])
   @@map("orders")
 }
 

@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthUser } from '../common/types/auth-user.type';
+import { assertOwnership } from '../common/utils/tenant.util';
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import { RecordTemperatureDto } from './dto/record-temperature.dto';
 
@@ -15,25 +18,35 @@ export class TemperatureService {
     });
   }
 
-  async createEquipment(dto: CreateEquipmentDto) {
+  async createEquipment(dto: CreateEquipmentDto, actor: AuthUser) {
+    if (actor.role !== Role.SUPER_ADMIN) dto.clientId = actor.clientId!;
     return this.prisma.temperatureEquipment.create({ data: dto });
   }
 
-  async updateEquipment(id: string, data: Partial<CreateEquipmentDto>) {
-    const eq = await this.prisma.temperatureEquipment.findUnique({ where: { id } });
+  async updateEquipment(id: string, data: Partial<CreateEquipmentDto>, actor: AuthUser) {
+    const eq = await this.prisma.temperatureEquipment.findUnique({ where: { id }, select: { clientId: true } });
     if (!eq) throw new NotFoundException('Equipamento não encontrado');
+    assertOwnership(actor, eq.clientId);
     return this.prisma.temperatureEquipment.update({ where: { id }, data });
   }
 
-  async deleteEquipment(id: string) {
-    const eq = await this.prisma.temperatureEquipment.findUnique({ where: { id } });
+  async deleteEquipment(id: string, actor: AuthUser) {
+    const eq = await this.prisma.temperatureEquipment.findUnique({ where: { id }, select: { clientId: true } });
     if (!eq) throw new NotFoundException('Equipamento não encontrado');
+    assertOwnership(actor, eq.clientId);
+
     await this.prisma.temperatureRecord.deleteMany({ where: { equipmentId: id } });
     await this.prisma.temperatureEquipment.delete({ where: { id } });
     return { id };
   }
 
-  async recordTemperature(dto: RecordTemperatureDto, operatorId: string) {
+  async recordTemperature(dto: RecordTemperatureDto, operatorId: string, actor: AuthUser) {
+    if (actor.role !== Role.SUPER_ADMIN) {
+      const eq = await this.prisma.temperatureEquipment.findUnique({ where: { id: dto.equipmentId }, select: { clientId: true } });
+      if (!eq) throw new NotFoundException('Equipamento não encontrado');
+      assertOwnership(actor, eq.clientId);
+    }
+
     return this.prisma.temperatureRecord.create({
       data: {
         temperature: dto.temperature,
@@ -65,6 +78,7 @@ export class TemperatureService {
     return this.prisma.temperatureRecord.findMany({
       where,
       orderBy: { recordedAt: 'asc' },
+      take: 500,
       include: {
         equipment: { select: { id: true, name: true, type: true, minTemp: true, maxTemp: true, location: true, client: { select: { id: true, name: true } } } },
         operator: { select: { id: true, name: true } },
@@ -72,7 +86,6 @@ export class TemperatureService {
     });
   }
 
-  // Estado de hoje por equipamento — quais sessões já foram registadas
   async getTodayStatus(clientId: string) {
     const equipment = await this.findAllEquipment(clientId);
 
@@ -82,22 +95,17 @@ export class TemperatureService {
     end.setHours(23, 59, 59, 999);
 
     const todayRecords = await this.prisma.temperatureRecord.findMany({
-      where: {
-        equipment: { clientId },
-        recordedAt: { gte: start, lte: end },
-      },
+      where: { equipment: { clientId }, recordedAt: { gte: start, lte: end } },
       select: { equipmentId: true, session: true, temperature: true, recordedAt: true },
     });
 
     return (equipment as any[]).map((eq) => {
       const records = todayRecords.filter((r) => r.equipmentId === eq.id);
-      const morning = records.find((r) => r.session === 'MORNING');
-      const evening = records.find((r) => r.session === 'EVENING');
       return {
         ...eq,
         today: {
-          morning: morning ?? null,
-          evening: evening ?? null,
+          morning: records.find((r) => r.session === 'MORNING') ?? null,
+          evening: records.find((r) => r.session === 'EVENING') ?? null,
         },
       };
     });

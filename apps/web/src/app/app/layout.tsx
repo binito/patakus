@@ -22,8 +22,7 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
 
   useEffect(() => {
-    hydrate();
-    setHydrated(true);
+    void hydrate().finally(() => setHydrated(true));
   }, [hydrate]);
 
   useEffect(() => {

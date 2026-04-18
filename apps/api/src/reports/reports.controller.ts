@@ -17,14 +17,16 @@ import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import { Role, AnomalyStatus } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { AuthUser } from '../common/types/auth-user.type';
 import { CreateAnomalyDto } from './dto/create-anomaly.dto';
 import { ReportsService } from './reports.service';
 
 const ALLOWED_MIMETYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const multerStorage = diskStorage({
   destination: process.env.UPLOAD_DIR ?? './uploads',
@@ -55,38 +57,39 @@ export class ReportsController {
   )
   createAnomaly(
     @Body() dto: CreateAnomalyDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.reportsService.createAnomaly(dto, user.id, files ?? []);
+    return this.reportsService.createAnomaly(dto, user.id, files ?? [], user);
   }
 
-  // Listagem filtrada por papel
   @Get('anomalies')
   findAll(
-    @Query('clientId') clientId: string,
+    @TenantId() clientId: string,
     @Query('areaId') areaId: string,
     @Query('status') status: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
   ) {
-    const cId =
-      user.role === Role.SUPER_ADMIN ? clientId : user.clientId;
-    return this.reportsService.findAll(cId, areaId, status as any);
+    return this.reportsService.findAll(
+      user.role === Role.SUPER_ADMIN ? (clientId || undefined) : clientId,
+      areaId,
+      status as AnomalyStatus,
+    );
   }
 
   @Get('anomalies/:id')
-  findOne(@Param('id') id: string) {
-    return this.reportsService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.reportsService.findOne(id, user);
   }
 
-  // Apenas SUPER_ADMIN e CLIENT_ADMIN alteram o estado da anomalia
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Patch('anomalies/:id/status')
   updateStatus(
     @Param('id') id: string,
     @Body('status') status: AnomalyStatus,
     @Body('resolvedNote') resolvedNote: string,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.reportsService.updateStatus(id, status, resolvedNote);
+    return this.reportsService.updateStatus(id, status, resolvedNote, user);
   }
 }

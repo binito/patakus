@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTemplateDto } from './dto/create-template.dto';
+import { AuthUser } from '../common/types/auth-user.type';
+import { assertOwnership } from '../common/utils/tenant.util';
+import { CreateTemplateDto, CreateChecklistTaskDto } from './dto/create-template.dto';
 import { SubmitChecklistDto } from './dto/submit-checklist.dto';
-import { CreateChecklistTaskDto } from './dto/create-template.dto';
 
 @Injectable()
 export class ChecklistsService {
@@ -10,9 +12,14 @@ export class ChecklistsService {
 
   // ── Templates ──────────────────────────────────────────────────────────────
 
-  async createTemplate(dto: CreateTemplateDto) {
-    const { tasks, ...templateData } = dto;
+  async createTemplate(dto: CreateTemplateDto, actor: AuthUser) {
+    if (actor.role !== Role.SUPER_ADMIN) {
+      const area = await this.prisma.area.findUnique({ where: { id: dto.areaId }, select: { clientId: true } });
+      if (!area) throw new NotFoundException('Área não encontrada');
+      assertOwnership(actor, area.clientId);
+    }
 
+    const { tasks, ...templateData } = dto;
     return this.prisma.checklistTemplate.create({
       data: {
         ...templateData,
@@ -37,20 +44,20 @@ export class ChecklistsService {
     });
   }
 
-  async findOneTemplate(id: string) {
+  async findOneTemplate(id: string, actor: AuthUser) {
     const tmpl = await this.prisma.checklistTemplate.findUnique({
       where: { id },
-      include: { tasks: { orderBy: { order: 'asc' } } },
+      include: { tasks: { orderBy: { order: 'asc' } }, area: { select: { clientId: true } } },
     });
     if (!tmpl) throw new NotFoundException('Template não encontrado');
+    assertOwnership(actor, tmpl.area.clientId);
     return tmpl;
   }
 
-  async updateTemplate(id: string, dto: Partial<CreateTemplateDto>) {
-    await this.findOneTemplate(id);
+  async updateTemplate(id: string, dto: Partial<CreateTemplateDto>, actor: AuthUser) {
+    await this.findOneTemplate(id, actor);
     const { tasks, ...templateData } = dto;
 
-    // Se foram enviadas tarefas, substituir todas (apagar + recriar)
     if (tasks) {
       await this.prisma.checklistTask.deleteMany({ where: { templateId: id } });
     }
@@ -72,18 +79,12 @@ export class ChecklistsService {
     });
   }
 
-  async deleteTemplate(id: string) {
-    await this.findOneTemplate(id);
+  async deleteTemplate(id: string, actor: AuthUser) {
+    await this.findOneTemplate(id, actor);
 
-    // 1. Apagar resultados de tarefas ligados às entradas deste template
-    await this.prisma.checklistTaskResult.deleteMany({
-      where: { entry: { templateId: id } },
-    });
-    // 2. Apagar as entradas (execuções) deste template
+    await this.prisma.checklistTaskResult.deleteMany({ where: { entry: { templateId: id } } });
     await this.prisma.checklistEntry.deleteMany({ where: { templateId: id } });
-    // 3. Apagar as tarefas do template
     await this.prisma.checklistTask.deleteMany({ where: { templateId: id } });
-    // 4. Apagar o template
     await this.prisma.checklistTemplate.delete({ where: { id } });
 
     return { deleted: true };
@@ -91,9 +92,14 @@ export class ChecklistsService {
 
   // ── Submissões ─────────────────────────────────────────────────────────────
 
-  async submitChecklist(dto: SubmitChecklistDto, operatorId: string) {
-    const { taskResults, ...entryData } = dto;
+  async submitChecklist(dto: SubmitChecklistDto, operatorId: string, actor: AuthUser) {
+    if (actor.role !== Role.SUPER_ADMIN) {
+      const area = await this.prisma.area.findUnique({ where: { id: dto.areaId }, select: { clientId: true } });
+      if (!area) throw new NotFoundException('Área não encontrada');
+      assertOwnership(actor, area.clientId);
+    }
 
+    const { taskResults, ...entryData } = dto;
     return this.prisma.checklistEntry.create({
       data: {
         ...entryData,
@@ -106,11 +112,7 @@ export class ChecklistsService {
           })),
         },
       },
-      include: {
-        taskResults: true,
-        template: true,
-        area: true,
-      },
+      include: { taskResults: true, template: true, area: true },
     });
   }
 
@@ -127,10 +129,11 @@ export class ChecklistsService {
         operator: { select: { name: true } },
       },
       orderBy: { completedAt: 'desc' },
+      take: 200,
     });
   }
 
-  async findOneEntry(id: string) {
+  async findOneEntry(id: string, actor: AuthUser) {
     const entry = await this.prisma.checklistEntry.findUnique({
       where: { id },
       include: {
@@ -141,6 +144,7 @@ export class ChecklistsService {
       },
     });
     if (!entry) throw new NotFoundException('Execução não encontrada');
+    assertOwnership(actor, entry.area.clientId);
     return entry;
   }
 }
