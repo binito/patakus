@@ -1,0 +1,502 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// UTILIZADORES E AUTENTICAÇÃO
+// ─────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN   // Pataku's
+  CLIENT_ADMIN  // Gestor do cliente (empresa)
+  OPERATOR      // Equipa de limpeza
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  password     String
+  role         Role     @default(OPERATOR)
+  phone        String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  client       Client?  @relation(fields: [clientId], references: [id])
+  clientId     String?
+
+  checklistEntries ChecklistEntry[]
+  anomalyReports   AnomalyReport[]
+  consumableReports ConsumableReport[]
+  temperatureRecords TemperatureRecord[]
+  entradaRecords   EntradaRecord[]
+  higienizacaoRecords HigienizacaoRecord[]
+  desinfecaoRecords DesinfecaoRecord[]
+  oleoFrituraRecords OleoFrituraRecord[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// CLIENTES (empresas que contratam a Pataku's)
+// ─────────────────────────────────────────────
+
+model Client {
+  id           String   @id @default(uuid())
+  name         String
+  nif          String?  @unique
+  email        String?
+  phone        String?
+  address      String?
+  sector       String?  // hotel, restaurante, clínica, escritório, etc.
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users        User[]
+  areas        Area[]
+  consumableStocks ConsumableStock[]
+  orders       Order[]
+  temperatureEquipment TemperatureEquipment[]
+  entradaRecords   EntradaRecord[]
+  higienizacaoRecords HigienizacaoRecord[]
+  desinfecaoRecords DesinfecaoRecord[]
+  oleoFrituraRecords OleoFrituraRecord[]
+
+  @@map("clients")
+}
+
+// ─────────────────────────────────────────────
+// ÁREAS DE LIMPEZA
+// ─────────────────────────────────────────────
+
+model Area {
+  id           String   @id @default(uuid())
+  name         String                    // ex: "Cozinha", "WC Piso 1"
+  description  String?
+  floor        String?                   // piso
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  client       Client   @relation(fields: [clientId], references: [id])
+  clientId     String
+
+  checklistTemplates ChecklistTemplate[]
+  checklistEntries   ChecklistEntry[]
+  anomalyReports     AnomalyReport[]
+
+  @@map("areas")
+}
+
+// ─────────────────────────────────────────────
+// CHECKLISTS
+// ─────────────────────────────────────────────
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model ChecklistTemplate {
+  id           String    @id @default(uuid())
+  name         String
+  frequency    Frequency @default(DAILY)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  area         Area      @relation(fields: [areaId], references: [id])
+  areaId       String
+
+  tasks        ChecklistTask[]
+  entries      ChecklistEntry[]
+
+  @@map("checklist_templates")
+}
+
+model ChecklistTask {
+  id           String   @id @default(uuid())
+  description  String
+  order        Int      @default(0)
+
+  template     ChecklistTemplate @relation(fields: [templateId], references: [id])
+  templateId   String
+
+  taskResults  ChecklistTaskResult[]
+
+  @@map("checklist_tasks")
+}
+
+model ChecklistEntry {
+  id           String   @id @default(uuid())
+  completedAt  DateTime @default(now())
+  notes        String?
+
+  template     ChecklistTemplate @relation(fields: [templateId], references: [id])
+  templateId   String
+
+  area         Area     @relation(fields: [areaId], references: [id])
+  areaId       String
+
+  operator     User     @relation(fields: [operatorId], references: [id])
+  operatorId   String
+
+  taskResults  ChecklistTaskResult[]
+
+  @@index([areaId, completedAt])
+  @@map("checklist_entries")
+}
+
+model ChecklistTaskResult {
+  id           String   @id @default(uuid())
+  done         Boolean  @default(false)
+  notes        String?
+
+  entry        ChecklistEntry @relation(fields: [entryId], references: [id])
+  entryId      String
+
+  task         ChecklistTask  @relation(fields: [taskId], references: [id])
+  taskId       String
+
+  @@map("checklist_task_results")
+}
+
+// ─────────────────────────────────────────────
+// REPORTES DE ANOMALIAS
+// ─────────────────────────────────────────────
+
+enum AnomalyStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum AnomalySeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model AnomalyReport {
+  id           String          @id @default(uuid())
+  title        String
+  description  String          @db.Text
+  status       AnomalyStatus   @default(OPEN)
+  severity     AnomalySeverity @default(MEDIUM)
+  resolvedAt   DateTime?
+  resolvedNote String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  area         Area   @relation(fields: [areaId], references: [id])
+  areaId       String
+
+  reporter     User   @relation(fields: [reporterId], references: [id])
+  reporterId   String
+
+  photos       AnomalyPhoto[]
+
+  @@map("anomaly_reports")
+}
+
+model AnomalyPhoto {
+  id           String   @id @default(uuid())
+  url          String
+  filename     String
+  createdAt    DateTime @default(now())
+
+  report       AnomalyReport @relation(fields: [reportId], references: [id])
+  reportId     String
+
+  @@map("anomaly_photos")
+}
+
+// ─────────────────────────────────────────────
+// CONTROLO DE TEMPERATURA
+// ─────────────────────────────────────────────
+
+enum EquipmentType {
+  FRIDGE   // Frigorífico
+  FREEZER  // Arca / Congelador
+}
+
+enum TempSession {
+  MORNING  // Manhã
+  EVENING  // Tarde/Noite
+}
+
+model TemperatureEquipment {
+  id        String        @id @default(uuid())
+  name      String
+  type      EquipmentType @default(FRIDGE)
+  location  String?
+  minTemp   Float?
+  maxTemp   Float?
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+
+  client    Client        @relation(fields: [clientId], references: [id])
+  clientId  String
+
+  records   TemperatureRecord[]
+
+  @@map("temperature_equipment")
+}
+
+model TemperatureRecord {
+  id          String       @id @default(uuid())
+  temperature Float
+  session     TempSession
+  notes       String?
+  recordedAt  DateTime     @default(now())
+
+  equipment   TemperatureEquipment @relation(fields: [equipmentId], references: [id])
+  equipmentId String
+
+  operator    User         @relation(fields: [operatorId], references: [id])
+  operatorId  String
+
+  @@index([equipmentId, recordedAt])
+  @@map("temperature_records")
+}
+
+// ─────────────────────────────────────────────
+// PRODUTOS E CONSUMÍVEIS
+// ─────────────────────────────────────────────
+
+model Product {
+  id           String   @id @default(uuid())
+  name         String
+  sku          String?  @unique
+  description  String?
+  unit         String   @default("un")   // un, L, kg, etc.
+  category     String?
+  price        Float?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  stocks       ConsumableStock[]
+  orderItems   OrderItem[]
+  consumptions Consumption[]
+
+  @@map("products")
+}
+
+model ConsumableStock {
+  id           String   @id @default(uuid())
+  quantity     Float    @default(0)
+  minQuantity  Float    @default(0)     // alerta quando abaixo deste valor
+  updatedAt    DateTime @updatedAt
+
+  client       Client   @relation(fields: [clientId], references: [id])
+  clientId     String
+
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+
+  consumableReports ConsumableReport[]
+
+  @@unique([clientId, productId])
+  @@map("consumable_stocks")
+}
+
+// ─────────────────────────────────────────────
+// REPORTES DE ESCASSEZ DE CONSUMÍVEIS
+// ─────────────────────────────────────────────
+
+enum ConsumableStatus {
+  OPEN
+  ORDERED
+  RESOLVED
+}
+
+model ConsumableReport {
+  id           String           @id @default(uuid())
+  quantity     Float?           // quantidade estimada em falta
+  notes        String?
+  status       ConsumableStatus @default(OPEN)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  stock        ConsumableStock  @relation(fields: [stockId], references: [id])
+  stockId      String
+
+  reporter     User             @relation(fields: [reporterId], references: [id])
+  reporterId   String
+
+  @@map("consumable_reports")
+}
+
+// ─────────────────────────────────────────────
+// CONSUMO (histórico para sugestões de encomenda)
+// ─────────────────────────────────────────────
+
+model Consumption {
+  id           String   @id @default(uuid())
+  quantity     Float
+  date         DateTime @default(now())
+  notes        String?
+
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+
+  clientId     String
+
+  @@map("consumptions")
+}
+
+// ─────────────────────────────────────────────
+// ENCOMENDAS
+// ─────────────────────────────────────────────
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id           String      @id @default(uuid())
+  status       OrderStatus @default(PENDING)
+  notes        String?
+  totalAmount  Float?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deliveredAt  DateTime?
+
+  client       Client      @relation(fields: [clientId], references: [id])
+  clientId     String
+
+  items        OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String  @id @default(uuid())
+  quantity     Float
+  unitPrice    Float?
+  notes        String?
+
+  order        Order   @relation(fields: [orderId], references: [id])
+  orderId      String
+
+  product      Product @relation(fields: [productId], references: [id])
+  productId    String
+
+  @@map("order_items")
+}
+
+// ─────────────────────────────────────────────
+// R1 – REGISTO DE CONTROLO DOS PRODUTOS À RECEÇÃO
+// ─────────────────────────────────────────────
+
+model EntradaRecord {
+  id           String   @id @default(uuid())
+  data         DateTime
+  materiaPrima String
+  fornecedor   String
+  faturaN      String?
+  veiculoOk    Boolean
+  embalagemOk  Boolean
+  rotulagemOk  Boolean
+  produtoOk    Boolean
+  temperatura  Float?
+  lote         String?
+  observacoes  String?
+  createdAt    DateTime @default(now())
+
+  client       Client   @relation(fields: [clientId], references: [id])
+  clientId     String
+
+  operator     User     @relation(fields: [operatorId], references: [id])
+  operatorId   String
+
+  @@index([clientId, data])
+  @@map("entrada_records")
+}
+
+// ─────────────────────────────────────────────
+// R3 – REGISTO DE HIGIENIZAÇÃO
+// ─────────────────────────────────────────────
+
+enum HigienizacaoZona {
+  COZINHA
+  PRODUCAO
+  ARMAZEM
+  SERVICO
+}
+
+model HigienizacaoRecord {
+  id          String           @id @default(uuid())
+  zona        HigienizacaoZona
+  dia         DateTime
+  itens       Json             // { fogao: true, forno: false, ... }
+  observacoes String?
+  createdAt   DateTime         @default(now())
+
+  client      Client           @relation(fields: [clientId], references: [id])
+  clientId    String
+
+  operator    User             @relation(fields: [operatorId], references: [id])
+  operatorId  String
+
+  @@index([clientId, dia])
+  @@map("higienizacao_records")
+}
+
+// ─────────────────────────────────────────────
+// R4 – REGISTO DE DESINFEÇÃO DE PRODUTOS
+// ─────────────────────────────────────────────
+
+model DesinfecaoRecord {
+  id                  String   @id @default(uuid())
+  data                DateTime
+  generosAlimenticios String
+  nomeDesinfetante    String
+  dose                String
+  quantidadeAgua      String
+  tempoAtuacao        String
+  observacoes         String?
+  createdAt           DateTime @default(now())
+
+  client              Client   @relation(fields: [clientId], references: [id])
+  clientId            String
+
+  operator            User     @relation(fields: [operatorId], references: [id])
+  operatorId          String
+
+  @@index([clientId, data])
+  @@map("desinfecao_records")
+}
+
+// ─────────────────────────────────────────────
+// R6 – CONTROLO DO ÓLEO DA FRITURA
+// ─────────────────────────────────────────────
+
+model OleoFrituraRecord {
+  id           String   @id @default(uuid())
+  data         DateTime
+  fritadeira   String
+  temperatura  Float
+  resultado    Int      // 1=<5% Bom, 2=6-12%, 3=13-16%, 4=17-23%, 5=>24% Mau
+  acoes        String?
+  createdAt    DateTime @default(now())
+
+  client       Client   @relation(fields: [clientId], references: [id])
+  clientId     String
+
+  responsavel  User     @relation(fields: [responsavelId], references: [id])
+  responsavelId String
+
+  @@index([clientId, data])
+  @@map("oleo_fritura_records")
+}
