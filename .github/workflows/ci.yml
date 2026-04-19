@@ -26,6 +26,8 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
         working-directory: apps/api
+        env:
+          DATABASE_URL: mysql://user:pass@localhost:3306/db
 
       - name: Run API tests
         run: npm test --workspace=apps/api
