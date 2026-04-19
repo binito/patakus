@@ -20,15 +20,15 @@ type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuthStore();
+  const { login, isAuthenticated, hydrated } = useAuthStore();
 
   const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (hydrated && isAuthenticated) {
       router.replace(isMobile() ? '/app' : '/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, router]);
 
   const {
     register,

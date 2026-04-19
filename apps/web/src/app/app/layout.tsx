@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ClipboardList, AlertTriangle, Package, Home, ClipboardCheck } from 'lucide-react';
@@ -15,14 +15,13 @@ const navItems = [
 ];
 
 export default function MobileLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user, hydrate } = useAuthStore();
-  const [hydrated, setHydrated] = useState(false);
+  const { isAuthenticated, user, hydrated, hydrate } = useAuthStore();
 
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    void hydrate().finally(() => setHydrated(true));
+    void hydrate();
   }, [hydrate]);
 
   useEffect(() => {

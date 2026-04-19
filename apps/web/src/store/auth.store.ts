@@ -6,14 +6,16 @@ import api from '@/lib/api';
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  hydrated: boolean;
   login: (user: User) => void;
   logout: () => void;
   hydrate: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
+  hydrated: false,
 
   login: (user: User) => {
     setUser(user);
@@ -34,16 +36,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   hydrate: async () => {
+    if (get().hydrated) return;
     const cached = getUser();
-    if (!cached) return;
+    if (!cached) {
+      set({ hydrated: true });
+      return;
+    }
     set({ user: cached, isAuthenticated: true });
     try {
       const res = await api.get<User>('/auth/me');
       setUser(res.data);
-      set({ user: res.data, isAuthenticated: true });
+      set({ user: res.data, isAuthenticated: true, hydrated: true });
     } catch {
       clearAuth();
-      set({ user: null, isAuthenticated: false });
+      set({ user: null, isAuthenticated: false, hydrated: true });
     }
   },
 }));
