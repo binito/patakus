@@ -3,16 +3,18 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ClipboardList, AlertTriangle, Package, Home, ClipboardCheck } from 'lucide-react';
+import { ClipboardList, AlertTriangle, Package, Home, ClipboardCheck, Settings } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
-const navItems = [
+const baseNavItems = [
   { href: '/app', icon: Home, label: 'Início', exact: true },
   { href: '/app/checklists', icon: ClipboardList, label: 'Checklists' },
   { href: '/app/anomalias', icon: AlertTriangle, label: 'Anomalias' },
   { href: '/app/consumiveis', icon: Package, label: 'Consumíveis' },
   { href: '/app/registos', icon: ClipboardCheck, label: 'Registos' },
 ];
+
+const adminNavItem = { href: '/app/gestao', icon: Settings, label: 'Gestão' };
 
 export default function MobileLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user, hydrated, hydrate } = useAuthStore();
@@ -47,8 +49,8 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-10">
-        {navItems.map(({ href, icon: Icon, label, exact }) => {
-          const active = exact ? pathname === href : pathname.startsWith(href);
+        {[...baseNavItems, ...(user?.role === 'SUPER_ADMIN' || user?.role === 'CLIENT_ADMIN' ? [adminNavItem] : [])].map(({ href, icon: Icon, label, exact }) => {
+          const active = (exact as boolean | undefined) ? pathname === href : pathname.startsWith(href);
           return (
             <Link
               key={href}
@@ -57,8 +59,8 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
                 active ? 'text-blue-600' : 'text-gray-500'
               }`}
             >
-              <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
-              <span>{label}</span>
+              <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+              <span className="truncate">{label}</span>
             </Link>
           );
         })}
