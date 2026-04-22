@@ -21,7 +21,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @UseGuards(ThrottlerGuard)
   @Post('login')
   @HttpCode(200)
