@@ -111,6 +111,7 @@ model ChecklistTemplate {
   name         String
   frequency    Frequency @default(DAILY)
   active       Boolean   @default(true)
+  isDefault    Boolean   @default(false)
   createdAt    DateTime  @default(now())
 
   area         Area      @relation(fields: [areaId], references: [id])

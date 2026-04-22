@@ -45,6 +45,7 @@ export interface ChecklistTemplate {
   frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
   areaId: string;
   active: boolean;
+  isDefault: boolean;
   tasks?: ChecklistTask[];
 }
 

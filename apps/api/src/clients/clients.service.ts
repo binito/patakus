@@ -19,7 +19,9 @@ export class ClientsService {
       const existe = await this.prisma.client.findUnique({ where: { nif: dto.nif } });
       if (existe) throw new ConflictException('NIF já registado');
     }
-    return this.prisma.client.create({ data: dto });
+    const client = await this.prisma.client.create({ data: dto });
+    await this.cloneDefaultTemplates(client.id);
+    return client;
   }
 
   async findAll() {
@@ -50,5 +52,37 @@ export class ClientsService {
       data: { active: false },
       select: { id: true, active: true },
     });
+  }
+
+  private async cloneDefaultTemplates(clientId: string) {
+    const defaults = await this.prisma.checklistTemplate.findMany({
+      where: { isDefault: true, active: true },
+      include: { tasks: { orderBy: { order: 'asc' } }, area: true },
+    });
+
+    for (const tmpl of defaults) {
+      let area = await this.prisma.area.findFirst({
+        where: { clientId, name: tmpl.area.name },
+      });
+      if (!area) {
+        area = await this.prisma.area.create({
+          data: { name: tmpl.area.name, clientId },
+        });
+      }
+
+      await this.prisma.checklistTemplate.create({
+        data: {
+          name: tmpl.name,
+          frequency: tmpl.frequency,
+          areaId: area.id,
+          tasks: {
+            create: tmpl.tasks.map(t => ({
+              description: t.description,
+              order: t.order,
+            })),
+          },
+        },
+      });
+    }
   }
 }

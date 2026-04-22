@@ -4,13 +4,14 @@ import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ClipboardList, ClipboardCheck, Plus, Trash2, GripVertical,
-  Eye, Download, Printer, CheckCircle2, XCircle, Pencil,
+  Eye, Download, Printer, CheckCircle2, XCircle, Pencil, Star,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import api from '@/lib/api';
 import { ChecklistTemplate, Area } from '@/types';
+import { useAuthStore } from '@/store/auth.store';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -139,6 +140,8 @@ ${sections}
 
 export default function ChecklistsPage() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const [tab, setTab] = useState<'templates' | 'history'>('templates');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<ChecklistTemplate | null>(null);
@@ -156,6 +159,7 @@ export default function ChecklistsPage() {
   const [name, setName] = useState('');
   const [frequency, setFrequency] = useState('DAILY');
   const [areaId, setAreaId] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
   const [tasks, setTasks] = useState<TaskDraft[]>([{ id: 't-0', description: '' }]);
 
   const { data: templates, isLoading: tplLoading } = useQuery<ChecklistTemplate[]>({
@@ -220,6 +224,7 @@ export default function ChecklistsPage() {
   const { mutate: createTemplate, isPending } = useMutation({
     mutationFn: () => api.post('/checklists/templates', {
       name, frequency, areaId,
+      isDefault: isSuperAdmin ? isDefault : undefined,
       tasks: tasks.filter(t => t.description.trim()).map((t, i) => ({ description: t.description.trim(), order: i + 1 })),
     }),
     onSuccess: () => { toast.success('Template criado!'); qc.invalidateQueries({ queryKey: ['checklist-templates'] }); closeModal(); },
@@ -229,6 +234,7 @@ export default function ChecklistsPage() {
   const { mutate: saveEdit, isPending: isSaving } = useMutation({
     mutationFn: () => api.patch(`/checklists/templates/${editingTemplate!.id}`, {
       name, frequency, areaId,
+      isDefault: isSuperAdmin ? isDefault : undefined,
       tasks: tasks.filter(t => t.description.trim()).map((t, i) => ({ description: t.description.trim(), order: i + 1 })),
     }),
     onSuccess: () => { toast.success('Template actualizado!'); qc.invalidateQueries({ queryKey: ['checklist-templates'] }); closeModal(); },
@@ -244,13 +250,14 @@ export default function ChecklistsPage() {
   const openEdit = (tpl: ChecklistTemplate) => {
     setEditingTemplate(tpl);
     setName(tpl.name); setFrequency(tpl.frequency); setAreaId(tpl.areaId);
+    setIsDefault(tpl.isDefault ?? false);
     setTasks(tpl.tasks?.map(t => ({ id: t.id, description: t.description })) ?? [{ id: `t-${taskSeq.current++}`, description: '' }]);
     setModalOpen(true);
   };
 
   const closeModal = () => {
     setModalOpen(false); setEditingTemplate(null);
-    setName(''); setFrequency('DAILY'); setAreaId('');
+    setName(''); setFrequency('DAILY'); setAreaId(''); setIsDefault(false);
     setTasks([{ id: `t-${taskSeq.current++}`, description: '' }]);
   };
 
@@ -376,11 +383,16 @@ export default function ChecklistsPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${freqColor[tpl.frequency] ?? 'bg-gray-100 text-gray-600'}`}>
                       {freqLabel[tpl.frequency] ?? tpl.frequency}
                     </span>
                     <span className="text-xs text-gray-400">{tpl.tasks?.length ?? 0} tarefas</span>
+                    {tpl.isDefault && (
+                      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                        <Star className="h-3 w-3" /> Padrão
+                      </span>
+                    )}
                   </div>
                 </Card>
               ))}
@@ -564,6 +576,21 @@ export default function ChecklistsPage() {
               ))}
             </div>
           </div>
+          {isSuperAdmin && (
+            <div className="flex items-center justify-between rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-amber-900">Template padrão</p>
+                <p className="text-xs text-amber-700">Clonado automaticamente para novos clientes</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDefault(v => !v)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDefault ? 'bg-amber-500' : 'bg-gray-200'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isDefault ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+          )}
           <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
             <Button variant="ghost" onClick={closeModal}>Cancelar</Button>
             {editingTemplate

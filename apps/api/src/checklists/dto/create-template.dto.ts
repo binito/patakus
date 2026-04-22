@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -35,6 +36,10 @@ export class CreateTemplateDto {
   areaId: string;
 
   // Lista de tarefas que compõem o template
+  @IsBoolean()
+  @IsOptional()
+  isDefault?: boolean;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateChecklistTaskDto)
