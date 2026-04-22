@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Thermometer, CheckCircle2, Clock } from 'lucide-react';
+import { Thermometer, CheckCircle2, Clock, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { useAuthStore } from '@/store/auth.store';
 
 interface TodayRecord {
   temperature: number;
@@ -40,20 +41,37 @@ function tempOk(temp: number, min?: number, max?: number) {
   return true;
 }
 
+interface EquipmentForm {
+  name: string;
+  type: 'FRIDGE' | 'FREEZER';
+  location: string;
+  minTemp: string;
+  maxTemp: string;
+}
+
+const emptyForm = (): EquipmentForm => ({ name: '', type: 'FRIDGE', location: '', minTemp: '', maxTemp: '' });
+
 export default function TemperaturasPage() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
+  const canManage = user?.role === 'CLIENT_ADMIN' || user?.role === 'SUPER_ADMIN';
 
-  const { data: equipment = [], isLoading, refetch } = useQuery<Equipment[]>({
+  const { data: equipment = [], isLoading } = useQuery<Equipment[]>({
     queryKey: ['app-temperature-today'],
     queryFn: () => api.get('/temperature/today').then(r => r.data),
     refetchInterval: 60_000,
   });
 
-  // Modal state
+  // Record temperature sheet
   const [sheet, setSheet] = useState<{ eq: Equipment; session: Session } | null>(null);
   const [tempInput, setTempInput] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // New equipment sheet
+  const [showNewEq, setShowNewEq] = useState(false);
+  const [eqForm, setEqForm] = useState<EquipmentForm>(emptyForm());
+  const [savingEq, setSavingEq] = useState(false);
 
   function openSheet(eq: Equipment, session: Session) {
     setSheet({ eq, session });
@@ -84,6 +102,36 @@ export default function TemperaturasPage() {
     }
   }, [sheet, tempInput, notes, qc]);
 
+  const saveEquipment = useCallback(async () => {
+    if (!eqForm.name.trim()) { toast.error('Nome obrigatório'); return; }
+
+    const minTemp = eqForm.minTemp ? parseFloat(eqForm.minTemp.replace(',', '.')) : undefined;
+    const maxTemp = eqForm.maxTemp ? parseFloat(eqForm.maxTemp.replace(',', '.')) : undefined;
+
+    if (eqForm.minTemp && isNaN(minTemp!)) { toast.error('Temperatura mínima inválida'); return; }
+    if (eqForm.maxTemp && isNaN(maxTemp!)) { toast.error('Temperatura máxima inválida'); return; }
+
+    setSavingEq(true);
+    try {
+      await api.post('/temperature/equipment', {
+        name: eqForm.name.trim(),
+        type: eqForm.type,
+        location: eqForm.location.trim() || undefined,
+        minTemp,
+        maxTemp,
+        clientId: user!.clientId,
+      });
+      toast.success('Equipamento criado!');
+      setShowNewEq(false);
+      setEqForm(emptyForm());
+      qc.invalidateQueries({ queryKey: ['app-temperature-today'] });
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Erro ao criar equipamento');
+    } finally {
+      setSavingEq(false);
+    }
+  }, [eqForm, user, qc]);
+
   const total = equipment.length;
   const complete = equipment.filter(e => e.today.morning && e.today.evening).length;
   const pending = total - complete;
@@ -113,12 +161,20 @@ export default function TemperaturasPage() {
           <div className="text-center py-16 text-gray-400">
             <Thermometer size={40} className="mx-auto mb-2 opacity-40" />
             <p className="text-sm">Nenhum equipamento configurado</p>
+            {canManage && (
+              <button
+                type="button"
+                onClick={() => setShowNewEq(true)}
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold"
+              >
+                <Plus size={16} /> Adicionar equipamento
+              </button>
+            )}
           </div>
         )}
 
         {equipment.map(eq => (
           <div key={eq.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            {/* Header do card */}
             <div className="flex items-center gap-3 px-4 pt-4 pb-3">
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${eq.type === 'FREEZER' ? 'bg-blue-100' : 'bg-cyan-100'}`}>
                 <Thermometer size={20} className={eq.type === 'FREEZER' ? 'text-blue-600' : 'text-cyan-600'} />
@@ -133,7 +189,6 @@ export default function TemperaturasPage() {
               </div>
             </div>
 
-            {/* Botões de sessão */}
             <div className="grid grid-cols-2 gap-px bg-gray-100 border-t border-gray-100">
               {(['morning', 'evening'] as const).map(sess => {
                 const record = eq.today[sess];
@@ -173,11 +228,22 @@ export default function TemperaturasPage() {
         ))}
       </div>
 
-      {/* Bottom sheet modal */}
+      {/* FAB — só para gestores */}
+      {canManage && equipment.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowNewEq(true)}
+          className="fixed bottom-24 right-4 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg active:bg-blue-700"
+          aria-label="Novo equipamento"
+        >
+          <Plus size={26} />
+        </button>
+      )}
+
+      {/* Bottom sheet — registar temperatura */}
       {sheet && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50" onClick={() => setSheet(null)}>
           <div className="bg-white rounded-t-2xl p-6 pb-10 space-y-4" onClick={e => e.stopPropagation()}>
-            {/* Handle */}
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-2" />
 
             <div>
@@ -187,7 +253,6 @@ export default function TemperaturasPage() {
               </p>
             </div>
 
-            {/* Selector de sessão */}
             <div className="flex gap-2">
               {(['MORNING', 'EVENING'] as Session[]).map(s => (
                 <button
@@ -205,7 +270,6 @@ export default function TemperaturasPage() {
               ))}
             </div>
 
-            {/* Input temperatura */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Temperatura (°C)</label>
               <input
@@ -225,7 +289,6 @@ export default function TemperaturasPage() {
               )}
             </div>
 
-            {/* Notas */}
             <input
               type="text"
               placeholder="Observação (opcional)"
@@ -241,6 +304,99 @@ export default function TemperaturasPage() {
               className="w-full py-4 rounded-xl bg-blue-600 text-white font-bold text-base active:bg-blue-700 disabled:opacity-50"
             >
               {submitting ? 'A guardar...' : 'Guardar registo'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom sheet — novo equipamento */}
+      {showNewEq && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50" onClick={() => setShowNewEq(false)}>
+          <div className="bg-white rounded-t-2xl p-6 pb-10 space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-2" />
+            <p className="font-bold text-gray-900 text-lg">Novo equipamento</p>
+
+            {/* Nome */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+              <input
+                type="text"
+                placeholder="ex: Frigorífico cozinha"
+                value={eqForm.name}
+                onChange={e => setEqForm(f => ({ ...f, name: e.target.value }))}
+                autoFocus
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Tipo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+              <div className="flex gap-2">
+                {(['FRIDGE', 'FREEZER'] as const).map(t => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setEqForm(f => ({ ...f, type: t }))}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                      eqForm.type === t
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-gray-50 text-gray-600 border-gray-200'
+                    }`}
+                  >
+                    {t === 'FRIDGE' ? '🧊 Frigorífico' : '❄️ Arca / Congelador'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Localização */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Localização</label>
+              <input
+                type="text"
+                placeholder="ex: Cozinha, Armazém..."
+                value={eqForm.location}
+                onChange={e => setEqForm(f => ({ ...f, location: e.target.value }))}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Temperaturas limite */}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Temp. mínima (°C)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  placeholder="ex: 2"
+                  value={eqForm.minTemp}
+                  onChange={e => setEqForm(f => ({ ...f, minTemp: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Temp. máxima (°C)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  placeholder="ex: 8"
+                  value={eqForm.maxTemp}
+                  onChange={e => setEqForm(f => ({ ...f, maxTemp: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={saveEquipment}
+              disabled={savingEq || !eqForm.name.trim()}
+              className="w-full py-4 rounded-xl bg-blue-600 text-white font-bold text-base active:bg-blue-700 disabled:opacity-50"
+            >
+              {savingEq ? 'A guardar...' : 'Criar equipamento'}
             </button>
           </div>
         </div>
