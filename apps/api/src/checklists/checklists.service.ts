@@ -59,22 +59,37 @@ export class ChecklistsService {
     const { tasks, ...templateData } = dto;
 
     if (tasks) {
-      await this.prisma.checklistTask.deleteMany({ where: { templateId: id } });
+      const existing = await this.prisma.checklistTask.findMany({
+        where: { templateId: id },
+        orderBy: { order: 'asc' },
+        select: { id: true },
+      });
+
+      // Update existing tasks in-place (preserves task results / historical data)
+      await this.prisma.$transaction([
+        ...tasks.map((t: CreateChecklistTaskDto, i: number) =>
+          existing[i]
+            ? this.prisma.checklistTask.update({
+                where: { id: existing[i].id },
+                data: { description: t.description, order: t.order ?? i + 1 },
+              })
+            : this.prisma.checklistTask.create({
+                data: { templateId: id, description: t.description, order: t.order ?? i + 1 },
+              }),
+        ),
+      ]);
+
+      // Remove surplus tasks (those beyond the new list)
+      const surplus = existing.slice(tasks.length).map(t => t.id);
+      if (surplus.length) {
+        await this.prisma.checklistTaskResult.deleteMany({ where: { taskId: { in: surplus } } });
+        await this.prisma.checklistTask.deleteMany({ where: { id: { in: surplus } } });
+      }
     }
 
     return this.prisma.checklistTemplate.update({
       where: { id },
-      data: {
-        ...templateData,
-        ...(tasks ? {
-          tasks: {
-            create: tasks.map((t: CreateChecklistTaskDto, i: number) => ({
-              description: t.description,
-              order: t.order ?? i,
-            })),
-          },
-        } : {}),
-      },
+      data: templateData,
       include: { tasks: { orderBy: { order: 'asc' } } },
     });
   }
