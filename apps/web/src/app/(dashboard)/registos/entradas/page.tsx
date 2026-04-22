@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PackageCheck, Plus, Trash2, Download, Printer, CheckCircle, XCircle } from 'lucide-react';
+import { PackageCheck, Plus, Trash2, Download, Printer, CheckCircle, XCircle, QrCode } from 'lucide-react';
+import ShareQrModal from '@/components/ShareQrModal';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Card } from '@/components/ui/Card';
@@ -119,6 +120,7 @@ export default function EntradasPage() {
   const { user } = useAuthStore();
   const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
@@ -230,6 +232,9 @@ export default function EntradasPage() {
           <div className="flex gap-2 ml-auto">
             <Button variant="secondary" className="gap-2" onClick={exportCsv} disabled={!records.length}>
               <Download className="h-4 w-4" /> CSV
+            </Button>
+            <Button variant="secondary" className="gap-2" onClick={() => setShowShare(true)} disabled={!records.length}>
+              <QrCode className="h-4 w-4" /> Partilhar
             </Button>
             <Button className="gap-2" onClick={printReport} disabled={!records.length}>
               <Printer className="h-4 w-4" /> Imprimir / PDF
@@ -356,6 +361,15 @@ export default function EntradasPage() {
           </div>
         </form>
       </Modal>
+
+      <ShareQrModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        type="ENTRADAS"
+        label={`Entradas: ${dateRange.start} — ${dateRange.end}`}
+        params={{ startDate: dateRange.start, endDate: dateRange.end }}
+        clientId={user?.clientId}
+      />
     </div>
   );
 }

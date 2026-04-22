@@ -22,6 +22,7 @@ import { EntradasModule } from './entradas/entradas.module';
 import { HigienizacaoModule } from './higienizacao/higienizacao.module';
 import { DesinfecaoModule } from './desinfecao/desinfecao.module';
 import { OleosModule } from './oleos/oleos.module';
+import { SharesModule } from './shares/shares.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { OleosModule } from './oleos/oleos.module';
     HigienizacaoModule,
     DesinfecaoModule,
     OleosModule,
+    SharesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

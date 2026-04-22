@@ -106,6 +106,15 @@ enum Frequency {
   MONTHLY
 }
 
+enum ReportType {
+  ENTRADAS
+  HIGIENIZACAO
+  DESINFECAO
+  OLEOS
+  TEMPERATURAS
+  CHECKLISTS
+}
+
 model ChecklistTemplate {
   id           String    @id @default(uuid())
   name         String
@@ -509,4 +518,21 @@ model OleoFrituraRecord {
 
   @@index([clientId, data])
   @@map("oleo_fritura_records")
+}
+
+// ─────────────────────────────────────────────
+// REPORT SHARES
+// ─────────────────────────────────────────────
+
+model ReportShare {
+  id          String     @id @default(uuid())
+  type        ReportType
+  label       String
+  params      Json
+  clientId    String
+  createdById String
+  createdAt   DateTime   @default(now())
+
+  @@index([clientId])
+  @@map("report_shares")
 }

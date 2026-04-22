@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { List, Plus, SprayCan } from 'lucide-react';
+import { List, Plus, SprayCan, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { useAuthStore } from '@/store/auth.store';
+import ShareQrModal from '@/components/ShareQrModal';
 
 interface HigienizacaoRecord {
   id: string;
@@ -44,7 +46,9 @@ const ZONA_LABELS: Record<string, string> = { COZINHA: 'Cozinha', PRODUCAO: 'Pro
 
 export default function HigienizacaoPage() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
   const [tab, setTab] = useState<'list' | 'new'>('list');
+  const [showShare, setShowShare] = useState(false);
 
   const [zona, setZona] = useState<Zona>('COZINHA');
   const [periodo, setPeriodo] = useState<'D' | 'S' | 'T'>('D');
@@ -96,6 +100,11 @@ export default function HigienizacaoPage() {
         <button onClick={() => setTab('new')} className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors ${tab === 'new' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500'}`}>
           <Plus size={16} /> Novo Registo
         </button>
+        {tab === 'list' && records.length > 0 && (
+          <button onClick={() => setShowShare(true)} className="px-3 text-gray-400 hover:text-green-600 border-l border-gray-100">
+            <QrCode size={18} />
+          </button>
+        )}
       </div>
 
       {tab === 'list' && (
@@ -200,6 +209,19 @@ export default function HigienizacaoPage() {
           </button>
         </div>
       )}
+
+      <ShareQrModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        variant="sheet"
+        type="HIGIENIZACAO"
+        label="Higienização — últimos 30 dias"
+        params={{
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today(),
+        }}
+        clientId={user?.clientId}
+      />
     </div>
   );
 }

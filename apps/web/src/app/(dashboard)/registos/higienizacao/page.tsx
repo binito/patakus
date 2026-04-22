@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { SprayCan, Plus, Trash2, Printer, CheckCircle, XCircle } from 'lucide-react';
+import { SprayCan, Plus, Trash2, Printer, CheckCircle, XCircle, QrCode } from 'lucide-react';
+import ShareQrModal from '@/components/ShareQrModal';
 import toast from 'react-hot-toast';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -143,6 +144,7 @@ export default function HigienizacaoPage() {
   const qc = useQueryClient();
   const [zona, setZona] = useState<Zona>('COZINHA');
   const [modalOpen, setModalOpen] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [mes, setMes] = useState(() => format(new Date(), 'yyyy-MM'));
 
   // itens checked no modal
@@ -244,6 +246,9 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
               className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex gap-2 ml-auto">
+            <Button variant="secondary" className="gap-2" onClick={() => setShowShare(true)} disabled={!records.length}>
+              <QrCode className="h-4 w-4" /> Partilhar
+            </Button>
             <Button className="gap-2" onClick={printReport} disabled={!records.length}>
               <Printer className="h-4 w-4" /> Imprimir / PDF
             </Button>
@@ -361,6 +366,15 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
           </div>
         </div>
       </Modal>
+
+      <ShareQrModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        type="HIGIENIZACAO"
+        label={`Higienização (${zona}) — ${mes}`}
+        params={{ startDate, endDate, zona }}
+        clientId={user?.clientId}
+      />
     </div>
   );
 }

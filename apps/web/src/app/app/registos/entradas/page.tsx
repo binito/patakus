@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { List, Plus, PackageCheck, PackageX } from 'lucide-react';
+import { List, Plus, PackageCheck, PackageX, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { useAuthStore } from '@/store/auth.store';
+import ShareQrModal from '@/components/ShareQrModal';
 
 interface EntradaRecord {
   id: string;
@@ -40,7 +42,9 @@ type CheckKey = typeof CHECKS[number]['key'];
 
 export default function EntradasPage() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
   const [tab, setTab] = useState<'list' | 'new'>('list');
+  const [showShare, setShowShare] = useState(false);
 
   const [materiaPrima, setMateriaPrima] = useState('');
   const [fornecedor, setFornecedor] = useState('');
@@ -94,6 +98,11 @@ export default function EntradasPage() {
         <button onClick={() => setTab('new')} className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors ${tab === 'new' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}>
           <Plus size={16} /> Nova Entrada
         </button>
+        {tab === 'list' && records.length > 0 && (
+          <button onClick={() => setShowShare(true)} className="px-3 text-gray-400 hover:text-blue-600 border-l border-gray-100">
+            <QrCode size={18} />
+          </button>
+        )}
       </div>
 
       {tab === 'list' && (
@@ -195,6 +204,19 @@ export default function EntradasPage() {
           </button>
         </div>
       )}
+
+      <ShareQrModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        variant="sheet"
+        type="ENTRADAS"
+        label="Entradas — últimos 30 dias"
+        params={{
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today(),
+        }}
+        clientId={user?.clientId}
+      />
     </div>
   );
 }

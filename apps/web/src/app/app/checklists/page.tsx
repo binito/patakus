@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ChevronRight, ClipboardList, RefreshCw } from 'lucide-react';
+import { ChevronRight, ClipboardList, RefreshCw, QrCode } from 'lucide-react';
 import api from '@/lib/api';
 import { ChecklistTemplate } from '@/types';
+import { useAuthStore } from '@/store/auth.store';
+import ShareQrModal from '@/components/ShareQrModal';
 
 const freqLabel: Record<string, string> = {
   DAILY: 'Diária',
@@ -18,19 +21,33 @@ const freqColor: Record<string, string> = {
   MONTHLY: 'bg-orange-100 text-orange-700',
 };
 
+function today() { return new Date().toISOString().split('T')[0]; }
+
 export default function ChecklistsPage() {
+  const { user } = useAuthStore();
+  const [showShare, setShowShare] = useState(false);
+
   const { data: templates, isLoading, refetch } = useQuery<ChecklistTemplate[]>({
     queryKey: ['app-checklist-templates'],
     queryFn: () => api.get('/checklists/templates').then(r => r.data),
   });
 
+  const startDate = new Date(); startDate.setDate(startDate.getDate() - 30);
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-gray-800">Checklists</h1>
-        <button onClick={() => refetch()} className="p-2 text-gray-400 active:text-blue-600">
-          <RefreshCw size={18} />
-        </button>
+        <div className="flex items-center gap-1">
+          {templates && templates.length > 0 && (
+            <button onClick={() => setShowShare(true)} className="p-2 text-gray-400 active:text-blue-600">
+              <QrCode size={18} />
+            </button>
+          )}
+          <button onClick={() => refetch()} className="p-2 text-gray-400 active:text-blue-600">
+            <RefreshCw size={18} />
+          </button>
+        </div>
       </div>
 
       {isLoading && (
@@ -68,6 +85,19 @@ export default function ChecklistsPage() {
           </Link>
         ))}
       </div>
+
+      <ShareQrModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        variant="sheet"
+        type="CHECKLISTS"
+        label="Checklists — últimos 30 dias"
+        params={{
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today(),
+        }}
+        clientId={user?.clientId}
+      />
     </div>
   );
 }

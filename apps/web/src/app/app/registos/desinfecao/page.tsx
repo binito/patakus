@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { List, Plus, FlaskConical } from 'lucide-react';
+import { List, Plus, FlaskConical, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { useAuthStore } from '@/store/auth.store';
+import ShareQrModal from '@/components/ShareQrModal';
 
 interface DesinfecaoRecord {
   id: string;
@@ -28,7 +30,9 @@ function fmtDate(iso: string) {
 
 export default function DesinfecaoPage() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
   const [tab, setTab] = useState<'list' | 'new'>('list');
+  const [showShare, setShowShare] = useState(false);
 
   const [generos, setGeneros] = useState('');
   const [desinfetante, setDesinfetante] = useState('');
@@ -80,6 +84,11 @@ export default function DesinfecaoPage() {
         <button onClick={() => setTab('new')} className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors ${tab === 'new' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>
           <Plus size={16} /> Novo Registo
         </button>
+        {tab === 'list' && records.length > 0 && (
+          <button onClick={() => setShowShare(true)} className="px-3 text-gray-400 hover:text-purple-600 border-l border-gray-100">
+            <QrCode size={18} />
+          </button>
+        )}
       </div>
 
       {tab === 'list' && (
@@ -132,6 +141,19 @@ export default function DesinfecaoPage() {
           </button>
         </div>
       )}
+
+      <ShareQrModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        variant="sheet"
+        type="DESINFECAO"
+        label="Desinfeção — últimos 30 dias"
+        params={{
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today(),
+        }}
+        clientId={user?.clientId}
+      />
     </div>
   );
 }

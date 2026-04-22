@@ -4,8 +4,9 @@ import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ClipboardList, ClipboardCheck, Plus, Trash2, GripVertical,
-  Eye, Download, Printer, CheckCircle2, XCircle, Pencil, Star,
+  Eye, Download, Printer, CheckCircle2, XCircle, Pencil, Star, QrCode,
 } from 'lucide-react';
+import ShareQrModal from '@/components/ShareQrModal';
 import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -142,6 +143,7 @@ export default function ChecklistsPage() {
   const qc = useQueryClient();
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const [showShare, setShowShare] = useState(false);
   const [tab, setTab] = useState<'templates' | 'history'>('templates');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<ChecklistTemplate | null>(null);
@@ -433,7 +435,15 @@ export default function ChecklistsPage() {
                 ))}
               </select>
             )}
-            <span className="text-xs text-gray-400 ml-auto">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-400">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+            <button
+              type="button"
+              onClick={() => setShowShare(true)}
+              disabled={!filtered.length}
+              className="ml-auto flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+            >
+              <QrCode className="h-3.5 w-3.5" /> Partilhar
+            </button>
           </div>
 
           {/* Barra de acções quando há selecção */}
@@ -678,6 +688,23 @@ export default function ChecklistsPage() {
           </div>
         </Modal>
       )}
+
+      <ShareQrModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        type="CHECKLISTS"
+        label={`Checklists — ${timeRangeOptions.find(o => o.value === timeRange)?.label ?? 'Todos'}`}
+        params={(() => {
+          const now = new Date();
+          const fmt = (d: Date) => d.toISOString().split('T')[0];
+          if (timeRange === 'today') return { startDate: fmt(now), endDate: fmt(now) };
+          if (timeRange === 'week') return { startDate: fmt(new Date(Date.now() - 7 * 86400000)), endDate: fmt(now) };
+          if (timeRange === 'month') return { startDate: fmt(new Date(Date.now() - 30 * 86400000)), endDate: fmt(now) };
+          if (timeRange === '3months') return { startDate: fmt(new Date(Date.now() - 90 * 86400000)), endDate: fmt(now) };
+          return {};
+        })()}
+        clientId={user?.clientId}
+      />
     </div>
   );
 }
