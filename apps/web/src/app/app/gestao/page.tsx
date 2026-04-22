@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, MapPin, UserCircle, ChevronRight } from 'lucide-react';
+import { Building2, MapPin, UserCircle, ClipboardList, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
 export default function GestaoPage() {
@@ -30,6 +30,13 @@ export default function GestaoPage() {
       label: 'Áreas',
       description: 'Gerir áreas e zonas',
       color: 'bg-green-100 text-green-600',
+    },
+    {
+      href: '/app/gestao/checklists',
+      icon: ClipboardList,
+      label: 'Checklists',
+      description: 'Criar e gerir templates de checklists',
+      color: 'bg-blue-100 text-blue-600',
     },
     {
       href: '/app/gestao/utilizadores',
