@@ -3,10 +3,12 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ClipboardList, AlertTriangle, Package, Home, ClipboardCheck, Settings } from 'lucide-react';
+import { ClipboardList, AlertTriangle, Package, Home, ClipboardCheck, Settings, type LucideIcon } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
-const baseNavItems = [
+type NavItem = { href: string; icon: LucideIcon; label: string; exact?: boolean };
+
+const baseNavItems: NavItem[] = [
   { href: '/app', icon: Home, label: 'Início', exact: true },
   { href: '/app/checklists', icon: ClipboardList, label: 'Checklists' },
   { href: '/app/anomalias', icon: AlertTriangle, label: 'Anomalias' },
@@ -14,7 +16,7 @@ const baseNavItems = [
   { href: '/app/registos', icon: ClipboardCheck, label: 'Registos' },
 ];
 
-const adminNavItem = { href: '/app/gestao', icon: Settings, label: 'Gestão' };
+const adminNavItem: NavItem = { href: '/app/gestao', icon: Settings, label: 'Gestão' };
 
 export default function MobileLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user, hydrated, hydrate } = useAuthStore();
@@ -50,7 +52,7 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-10">
         {[...baseNavItems, ...(user?.role === 'SUPER_ADMIN' || user?.role === 'CLIENT_ADMIN' ? [adminNavItem] : [])].map(({ href, icon: Icon, label, exact }) => {
-          const active = (exact as boolean | undefined) ? pathname === href : pathname.startsWith(href);
+          const active = exact ? pathname === href : pathname.startsWith(href);
           return (
             <Link
               key={href}
