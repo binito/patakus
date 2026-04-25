@@ -8,6 +8,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { ShaderBackground } from '@/components/ui/ShaderBackground';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/lib/api';
 
@@ -51,14 +52,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center px-4 overflow-hidden">
+      <ShaderBackground />
+
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-blue-600">Patakus</h1>
-          <p className="mt-2 text-gray-500">Faça login para continuar</p>
+          <h1 className="text-3xl font-bold text-white drop-shadow">Patakus</h1>
+          <p className="mt-2 text-white/70">Faça login para continuar</p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="rounded-xl border border-white/20 bg-white/10 p-8 shadow-2xl backdrop-blur-md">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <Input
               label="E-mail"
