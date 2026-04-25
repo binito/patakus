@@ -23,21 +23,23 @@ interface ShortageReport {
   reporter?: { name: string };
 }
 
-function StatCard({ label, value, icon: Icon, iconClass, href }: {
-  label: string; value: number | string; icon: React.ElementType; iconClass: string; href?: string;
+function StatCard({ label, value, icon: Icon, accentClass, iconColorClass, href }: {
+  label: string; value: number | string; icon: React.ElementType;
+  accentClass: string; iconColorClass: string; href?: string;
 }) {
   const inner = (
-    <Card className={clsx('group', href && 'hover:border-border/80 transition-colors cursor-pointer')}>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-2xl font-bold text-gray-100 tabular-nums">{value}</p>
-          <p className="mt-1 text-xs text-gray-500">{label}</p>
-        </div>
-        <div className={clsx('flex h-9 w-9 items-center justify-center rounded-lg', iconClass)}>
-          <Icon className="h-4 w-4" />
-        </div>
-      </div>
-    </Card>
+    <div className={clsx(
+      'group relative overflow-hidden rounded-2xl p-5 transition-all duration-150',
+      'bg-gradient-to-b from-surface-2 to-[#17171a] ring-1 ring-white/[0.07]',
+      href && 'hover:ring-white/[0.12] hover:-translate-y-0.5 cursor-pointer'
+    )}>
+      {/* Left accent bar */}
+      <span className={clsx('absolute left-0 top-3 bottom-3 w-[3px] rounded-full', accentClass)} />
+      {/* Watermark icon */}
+      <Icon className={clsx('absolute -right-3 -bottom-2 h-20 w-20 rotate-12 opacity-[0.06]', iconColorClass)} />
+      <p className="text-3xl font-bold tabular-nums text-gray-100">{value}</p>
+      <p className="mt-1.5 text-xs text-gray-500">{label}</p>
+    </div>
   );
   return href ? <Link href={href}>{inner}</Link> : inner;
 }
@@ -80,19 +82,21 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {isSuperAdmin && (
             <StatCard label="Clientes" value={stats?.totalClients ?? 0}
-              icon={MapPin} iconClass="bg-primary-500/10 text-primary-400" />
+              icon={MapPin} accentClass="bg-primary-500" iconColorClass="text-primary-500" />
           )}
           <StatCard label="Áreas" value={stats?.totalAreas ?? 0}
-            icon={MapPin} iconClass="bg-blue-500/10 text-blue-400" />
+            icon={MapPin} accentClass="bg-blue-500" iconColorClass="text-blue-500" />
           <StatCard label="Anomalias" value={stats?.openAnomalies ?? 0}
-            icon={AlertTriangle} iconClass="bg-red-500/10 text-red-400" href="/anomalies" />
+            icon={AlertTriangle} accentClass="bg-red-500" iconColorClass="text-red-500" href="/anomalies" />
           <StatCard label="Pedidos" value={stats?.pendingOrders ?? 0}
-            icon={ShoppingCart} iconClass="bg-orange-500/10 text-orange-400" href="/orders" />
+            icon={ShoppingCart} accentClass="bg-orange-500" iconColorClass="text-orange-500" href="/orders" />
           <StatCard label="Faltas" value={stats?.openShortageReports ?? 0}
-            icon={Package} iconClass={stats?.openShortageReports ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}
+            icon={Package}
+            accentClass={stats?.openShortageReports ? 'bg-red-500' : 'bg-green-500'}
+            iconColorClass={stats?.openShortageReports ? 'text-red-500' : 'text-green-500'}
             href="/consumables" />
           <StatCard label="Checklists/mês" value={stats?.checklistsThisMonth ?? 0}
-            icon={ClipboardList} iconClass="bg-green-500/10 text-green-400" href="/checklists" />
+            icon={ClipboardList} accentClass="bg-green-500" iconColorClass="text-green-500" href="/checklists" />
         </div>
       )}
 
@@ -118,7 +122,7 @@ export default function DashboardPage() {
               <>
                 <ul className="divide-y divide-border">
                   {openShortages.slice(0, 5).map(r => (
-                    <li key={r.id} className="flex items-start justify-between gap-3 px-5 py-3">
+                    <li key={r.id} className="flex items-start justify-between gap-3 px-5 py-3 hover:bg-white/[0.02] transition-colors">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-200 truncate">{r.stock?.product?.name ?? '—'}</p>
                         <p className="text-xs text-gray-600 truncate">
@@ -158,7 +162,7 @@ export default function DashboardPage() {
               <>
                 <ul className="divide-y divide-border">
                   {recentAnomalies.slice(0, 5).map(a => (
-                    <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                    <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-white/[0.02] transition-colors">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-200 truncate">{a.title}</p>
                         <p className="text-xs text-gray-600">{a.area?.name ?? '—'}</p>

@@ -6,25 +6,25 @@ type BadgeStatus =
   | 'CANCELLED' | 'ORDERED' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   | 'ACTIVE' | 'INACTIVE';
 
-const statusConfig: Record<BadgeStatus, { label: string; className: string }> = {
-  OPEN:        { label: 'Aberto',       className: 'bg-red-500/15 text-red-400 ring-1 ring-red-500/25' },
-  IN_PROGRESS: { label: 'Em Andamento', className: 'bg-yellow-500/15 text-yellow-400 ring-1 ring-yellow-500/25' },
-  RESOLVED:    { label: 'Resolvido',    className: 'bg-green-500/15 text-green-400 ring-1 ring-green-500/25' },
-  PENDING:     { label: 'Pendente',     className: 'bg-yellow-500/15 text-yellow-400 ring-1 ring-yellow-500/25' },
-  APPROVED:    { label: 'Aprovado',     className: 'bg-green-500/15 text-green-400 ring-1 ring-green-500/25' },
-  REJECTED:    { label: 'Rejeitado',    className: 'bg-red-500/15 text-red-400 ring-1 ring-red-500/25' },
-  DELIVERED:   { label: 'Entregue',     className: 'bg-primary-500/15 text-primary-400 ring-1 ring-primary-500/25' },
-  COMPLETED:   { label: 'Concluído',    className: 'bg-green-500/15 text-green-400 ring-1 ring-green-500/25' },
-  LOW:         { label: 'Baixa',        className: 'bg-surface-3 text-gray-400 ring-1 ring-border' },
-  MEDIUM:      { label: 'Média',        className: 'bg-yellow-500/15 text-yellow-400 ring-1 ring-yellow-500/25' },
-  HIGH:        { label: 'Alta',         className: 'bg-orange-500/15 text-orange-400 ring-1 ring-orange-500/25' },
-  CRITICAL:    { label: 'Crítica',      className: 'bg-red-500/25 text-red-300 ring-1 ring-red-500/40 font-semibold' },
-  DRAFT:       { label: 'Rascunho',     className: 'bg-surface-3 text-gray-500 ring-1 ring-border' },
-  CONFIRMED:   { label: 'Confirmado',   className: 'bg-primary-500/15 text-primary-400 ring-1 ring-primary-500/25' },
-  CANCELLED:   { label: 'Cancelado',    className: 'bg-red-500/15 text-red-400 ring-1 ring-red-500/25' },
-  ORDERED:     { label: 'Encomendado',  className: 'bg-primary-500/15 text-primary-400 ring-1 ring-primary-500/25' },
-  ACTIVE:      { label: 'Ativo',        className: 'bg-green-500/15 text-green-400 ring-1 ring-green-500/25' },
-  INACTIVE:    { label: 'Inativo',      className: 'bg-surface-3 text-gray-500 ring-1 ring-border' },
+const statusConfig: Record<BadgeStatus, { label: string; dot: string; text: string }> = {
+  OPEN:        { label: 'Aberto',       dot: 'bg-red-400',     text: 'text-red-400' },
+  IN_PROGRESS: { label: 'Em Andamento', dot: 'bg-yellow-400',  text: 'text-yellow-400' },
+  RESOLVED:    { label: 'Resolvido',    dot: 'bg-green-400',   text: 'text-green-400' },
+  PENDING:     { label: 'Pendente',     dot: 'bg-yellow-400',  text: 'text-yellow-400' },
+  APPROVED:    { label: 'Aprovado',     dot: 'bg-green-400',   text: 'text-green-400' },
+  REJECTED:    { label: 'Rejeitado',    dot: 'bg-red-400',     text: 'text-red-400' },
+  DELIVERED:   { label: 'Entregue',     dot: 'bg-primary-400', text: 'text-primary-400' },
+  COMPLETED:   { label: 'Concluído',    dot: 'bg-green-400',   text: 'text-green-400' },
+  LOW:         { label: 'Baixa',        dot: 'bg-gray-500',    text: 'text-gray-500' },
+  MEDIUM:      { label: 'Média',        dot: 'bg-yellow-400',  text: 'text-yellow-400' },
+  HIGH:        { label: 'Alta',         dot: 'bg-orange-400',  text: 'text-orange-400' },
+  CRITICAL:    { label: 'Crítica',      dot: 'bg-red-400 animate-pulse', text: 'text-red-300 font-semibold' },
+  DRAFT:       { label: 'Rascunho',     dot: 'bg-gray-600',    text: 'text-gray-600' },
+  CONFIRMED:   { label: 'Confirmado',   dot: 'bg-primary-400', text: 'text-primary-400' },
+  CANCELLED:   { label: 'Cancelado',    dot: 'bg-red-400',     text: 'text-red-400' },
+  ORDERED:     { label: 'Encomendado',  dot: 'bg-primary-400', text: 'text-primary-400' },
+  ACTIVE:      { label: 'Ativo',        dot: 'bg-green-400 animate-pulse', text: 'text-green-400' },
+  INACTIVE:    { label: 'Inativo',      dot: 'bg-gray-600',    text: 'text-gray-600' },
 };
 
 interface BadgeProps {
@@ -33,10 +33,11 @@ interface BadgeProps {
 }
 
 export function Badge({ status, className }: BadgeProps) {
-  const config = statusConfig[status] ?? { label: status, className: 'bg-surface-3 text-gray-400 ring-1 ring-border' };
+  const cfg = statusConfig[status] ?? { label: status, dot: 'bg-gray-500', text: 'text-gray-500' };
   return (
-    <span className={clsx('inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium', config.className, className)}>
-      {config.label}
+    <span className={clsx('inline-flex items-center gap-1.5 text-xs font-medium', cfg.text, className)}>
+      <span className={clsx('h-1.5 w-1.5 shrink-0 rounded-full', cfg.dot)} />
+      {cfg.label}
     </span>
   );
 }

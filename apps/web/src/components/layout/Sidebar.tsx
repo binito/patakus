@@ -130,12 +130,15 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={clsx(
-                'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors',
+                'relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150',
                 isActive
-                  ? 'text-gray-100 bg-surface-3 font-medium'
-                  : 'text-gray-500 hover:text-gray-300 hover:bg-surface-2'
+                  ? 'text-gray-100 bg-surface-3 font-medium shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]'
+                  : 'text-gray-500 hover:text-gray-300 hover:bg-surface-2/60'
               )}
             >
+              {isActive && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+              )}
               <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-primary-400' : '')} />
               <span className="flex-1">{item.label}</span>
               {item.href === '/consumables' && (stats?.openShortageReports ?? 0) > 0 && (
