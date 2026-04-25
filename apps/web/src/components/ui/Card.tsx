@@ -16,7 +16,7 @@ export function Card({ padding = 'md', className, children, ...props }: CardProp
   return (
     <div
       className={clsx(
-        'rounded-lg border border-gray-200 bg-white shadow-sm',
+        'rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm shadow-lg',
         paddingClasses[padding],
         className
       )}
@@ -37,7 +37,7 @@ export function CardHeader({ className, children, ...props }: HTMLAttributes<HTM
 
 export function CardTitle({ className, children, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={clsx('text-base font-semibold text-gray-900', className)} {...props}>
+    <h3 className={clsx('text-base font-semibold text-white', className)} {...props}>
       {children}
     </h3>
   );

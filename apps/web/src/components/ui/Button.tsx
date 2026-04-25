@@ -14,13 +14,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-blue-300',
+    'bg-primary-400 text-black font-semibold hover:bg-primary-300 focus:ring-primary-400 disabled:bg-primary-400/40 disabled:text-black/40',
   secondary:
-    'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-400 disabled:bg-gray-100 disabled:text-gray-400',
+    'bg-white/10 text-white border border-white/20 hover:bg-white/20 focus:ring-white/30 disabled:bg-white/5 disabled:text-white/30',
   danger:
-    'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-300',
+    'bg-rose-500/80 text-white hover:bg-rose-500 focus:ring-rose-400 disabled:bg-rose-500/30',
   ghost:
-    'bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-400 disabled:text-gray-300',
+    'bg-transparent text-white/70 hover:bg-white/10 hover:text-white focus:ring-white/20 disabled:text-white/20',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -48,7 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         className={clsx(
           'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors',
-          'focus:outline-none focus:ring-2 focus:ring-offset-2',
+          'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent',
           'disabled:cursor-not-allowed',
           variantClasses[variant],
           sizeClasses[size],
@@ -63,19 +63,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             fill="none"
             viewBox="0 0 24 24"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         )}
         {children}
