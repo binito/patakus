@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Shader Wallpapers</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0c; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    #__bundler_loading { position: fixed; bottom: 20px; right: 20px; font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; color: #666; background: #fff; padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 10000; }
+    #__bundler_thumbnail { position: fixed; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #0a0a0c; z-index: 9999; }
+    #__bundler_thumbnail svg { width: 100%; height: 100%; object-fit: contain; }
+    #__bundler_placeholder { color: #999; font-size: 14px; }
+  </style>
+  <noscript>
+    <style>#__bundler_loading { display: none; }</style>
+    <div style="position:fixed;bottom:12px;left:12px;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:#999;background:rgba(255,255,255,0.9);padding:6px 12px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);z-index:10000;">
+      This page requires JavaScript to display.
+    </div>
+  </noscript>
+</head>
+<body>
+  <div id="__bundler_thumbnail">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="g" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="#f4f3ee" stop-opacity="0.95"></stop>
+        <stop offset="40%" stop-color="#7aa6c7" stop-opacity="0.45"></stop>
+        <stop offset="100%" stop-color="#0a0a0c" stop-opacity="0"></stop>
+      </radialGradient>
+    </defs>
+    <rect x="0" y="0" width="1200" height="800" fill="#0a0a0c"></rect>
+    <circle cx="600" cy="400" r="320" fill="url(#g)"></circle>
+    <circle cx="600" cy="400" r="160" fill="none" stroke="#f4f3ee" stroke-opacity="0.7" stroke-width="2"></circle>
+    <circle cx="600" cy="400" r="6" fill="#f4f3ee"></circle>
+  </svg>
+</div>
+  <div id="__bundler_loading">Unpacking...</div>
+
+  <script>
+    
+document.addEventListener('DOMContentLoaded', async function() {
+  const loading = document.getElementById('__bundler_loading');
+  function setStatus(msg) { if (loading) loading.textContent = msg; }
+
+  // Error sink persists across replaceWith since it's on window, not the DOM.
+  window.addEventListener('error', function(e) {
+    var p = document.body || document.documentElement;
+    var d = document.getElementById('__bundler_err') || p.appendChild(document.createElement('div'));
+    d.id = '__bundler_err';
+    d.style.cssText = 'position:fixed;bottom:12px;left:12px;right:12px;font:12px/1.4 ui-monospace,monospace;background:#2a1215;color:#ff8a80;padding:10px 14px;border-radius:8px;border:1px solid #5c2b2e;z-index:99999;white-space:pre-wrap;max-height:40vh;overflow:auto';
+    d.textContent = (d.textContent ? d.textContent + String.fromCharCode(10) : '') +
+      '[bundle] ' + (e.message || e.type) +
+      (e.filename ? ' (' + e.filename.slice(0, 60) + ':' + e.lineno + ')' : '');
+  }, true);
+
+  try {
+    const manifestEl = document.querySelector('script[type="__bundler/manifest"]');
+    const templateEl = document.querySelector('script[type="__bundler/template"]');
+    if (!manifestEl || !templateEl) {
+      setStatus('Error: missing bundle data');
+      console.error('[bundler] Missing script tags — manifestEl:', !!manifestEl, 'templateEl:', !!templateEl);
+      return;
+    }
+
+    const manifest = JSON.parse(manifestEl.textContent);
+    let template = JSON.parse(templateEl.textContent);
+
+    const uuids = Object.keys(manifest);
+    setStatus('Unpacking ' + uuids.length + ' assets...');
+
+    const blobUrls = {};
+    await Promise.all(uuids.map(async (uuid) => {
+      const entry = manifest[uuid];
+      try {
+        const binaryStr = atob(entry.data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+        let finalBytes = bytes;
+        if (entry.compressed) {
+          if (typeof DecompressionStream !== 'undefined') {
+            const ds = new DecompressionStream('gzip');
+            const writer = ds.writable.getWriter();
+            const reader = ds.readable.getReader();
+            writer.write(bytes);
+            writer.close();
+            const chunks = [];
+            let totalLen = 0;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              totalLen += value.length;
+            }
+            finalBytes = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const chunk of chunks) { finalBytes.set(chunk, offset); offset += chunk.length; }
+          } else {
+            console.warn('DecompressionStream not available, asset ' + uuid + ' may not render');
+          }
+        }
+
+        blobUrls[uuid] = URL.createObjectURL(new Blob([finalBytes], { type: entry.mime }));
+      } catch (err) {
+        console.error('Failed to decode asset ' + uuid + ':', err);
+        blobUrls[uuid] = URL.createObjectURL(new Blob([], { type: entry.mime }));
+      }
+    }));
+
+    const extResEl = document.querySelector('script[type="__bundler/ext_resources"]');
+    const extResources = extResEl ? JSON.parse(extResEl.textContent) : [];
+    const resourceMap = {};
+    for (const entry of extResources) {
+      if (blobUrls[entry.uuid]) resourceMap[entry.id] = blobUrls[entry.uuid];
+    }
+
+    setStatus('Rendering...');
+    for (const uuid of uuids) template = template.split(uuid).join(blobUrls[uuid]);
+
+    // Strip integrity + crossorigin — blob URLs from a file:// document inherit
+    // a null origin, so crossorigin forces a CORS fetch that SRI then rejects.
+    // The manifest bytes are ours; SRI protects against CDN compromise, not this.
+    template = template.replace(/\s+integrity="[^"]*"/gi, '').replace(/\s+crossorigin="[^"]*"/gi, '');
+
+    const resourceScript = '<script>window.__resources = ' +
+      JSON.stringify(resourceMap).split('</' + 'script>').join('<\\/' + 'script>') +
+      ';</' + 'script>';
+    // Inject after <head> so the DOCTYPE stays first; prepending the script
+    // would push the parser into quirks mode. DOMParser always emits a <head>
+    // (synthesizing one if the source HTML omitted it) but may carry
+    // attributes through, so match the full opening tag. slice() rather than
+    // replace() keeps us clear of $-pattern substitution in resourceScript.
+    const headOpen = template.match(/<head[^>]*>/i);
+    if (headOpen) {
+      const i = headOpen.index + headOpen[0].length;
+      template = template.slice(0, i) + resourceScript + template.slice(i);
+    }
+
+    // Parse the template and swap the root element. Scripts inserted via
+    // DOMParser/replaceWith are inert per spec — re-create each with
+    // createElement so they execute, awaiting onload for src scripts to
+    // preserve ordering (React before ReactDOM before Babel before text/babel).
+    const doc = new DOMParser().parseFromString(template, 'text/html');
+    document.documentElement.replaceWith(doc.documentElement);
+    const dead = Array.from(document.scripts);
+    for (const old of dead) {
+      const s = document.createElement('script');
+      for (const a of old.attributes) s.setAttribute(a.name, a.value);
+      s.textContent = old.textContent;
+      // text/babel scripts with a src: fetch and inline. transformScriptTags
+      // does XHR against the src, but blob:null/ from a file:// origin is
+      // silently dropped. Inlining makes it a plain inline babel script,
+      // which transformScriptTags handles unconditionally.
+      if ((s.type === 'text/babel' || s.type === 'text/jsx') && s.src) {
+        const r = await fetch(s.src);
+        s.textContent = await r.text();
+        s.removeAttribute('src');
+      }
+      const p = s.src ? new Promise(function(r) { s.onload = s.onerror = r; }) : null;
+      old.replaceWith(s);
+      if (p) await p;
+    }
+    // Babel standalone auto-transforms type=text/babel on DOMContentLoaded,
+    // which fired before we swapped the document. Trigger manually if present.
+    if (window.Babel && typeof window.Babel.transformScriptTags === 'function') {
+      window.Babel.transformScriptTags();
+    }
+  } catch (err) {
+    setStatus('Error unpacking: ' + err.message);
+    console.error('Bundle unpack error:', err);
+  }
+});
+
+  </script>
+
+  <script type="__bundler/manifest">
+{}
+  </script>
+
+  <script type="__bundler/ext_resources">
+[]
+  </script>
+
+  <script type="__bundler/template">
+"<!DOCTYPE html>\n<html lang=\"en\"><head>\n<meta charset=\"utf-8\">\n<title>Shader Wallpapers<\u002Ftitle>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n\n<style>\n  :root {\n    --ink: #f4f3ee;\n    --dim: rgba(244, 243, 238, 0.55);\n    --line: rgba(244, 243, 238, 0.16);\n    --chip: rgba(20, 20, 24, 0.45);\n    --chip-hi: rgba(244, 243, 238, 0.10);\n  }\n  * { box-sizing: border-box; }\n  html, body {\n    margin: 0;\n    height: 100%;\n    overflow: hidden;\n    background: #0a0a0c;\n    color: var(--ink);\n    font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n    -webkit-font-smoothing: antialiased;\n    cursor: none;\n  }\n  canvas {\n    position: fixed;\n    inset: 0;\n    width: 100%;\n    height: 100%;\n    display: block;\n    z-index: 0;\n  }\n\n  /* Custom cursor — a small ring that hints \"interactive\" */\n  .cursor {\n    position: fixed;\n    top: 0; left: 0;\n    width: 28px;\n    height: 28px;\n    border: 1px solid rgba(244, 243, 238, 0.7);\n    border-radius: 50%;\n    transform: translate(-50%, -50%);\n    pointer-events: none;\n    z-index: 30;\n    mix-blend-mode: difference;\n    transition: width 180ms ease, height 180ms ease, border-color 180ms ease;\n  }\n  .cursor.dot {\n    width: 6px; height: 6px;\n    background: rgba(244, 243, 238, 0.9);\n    border-color: transparent;\n  }\n  .cursor.press {\n    width: 44px; height: 44px;\n  }\n\n  /* OS-ish chrome — a faux clock + signature */\n  .clock {\n    position: fixed;\n    top: 22px;\n    right: 26px;\n    z-index: 20;\n    text-align: right;\n    font-feature-settings: \"tnum\" 1;\n    user-select: none;\n  }\n  .clock .time {\n    font-family: \"SF Mono\", \"JetBrains Mono\", \"Menlo\", monospace;\n    font-size: 13px;\n    letter-spacing: 0.06em;\n    color: var(--ink);\n    opacity: 0.85;\n  }\n  .clock .date {\n    font-size: 11px;\n    letter-spacing: 0.18em;\n    text-transform: uppercase;\n    color: var(--dim);\n    margin-top: 4px;\n  }\n\n  .brand {\n    position: fixed;\n    top: 22px;\n    left: 26px;\n    z-index: 20;\n    display: flex;\n    align-items: center;\n    gap: 10px;\n    user-select: none;\n  }\n  .brand .mark {\n    width: 18px;\n    height: 18px;\n    border: 1px solid var(--ink);\n    border-radius: 50%;\n    position: relative;\n  }\n  .brand .mark::after {\n    content: \"\";\n    position: absolute;\n    inset: 4px;\n    border-radius: 50%;\n    background: var(--ink);\n  }\n  .brand .name {\n    font-size: 11px;\n    letter-spacing: 0.32em;\n    text-transform: uppercase;\n    color: var(--ink);\n  }\n\n  /* Wallpaper switcher */\n  .dock {\n    position: fixed;\n    left: 50%;\n    bottom: 24px;\n    transform: translateX(-50%);\n    z-index: 20;\n    display: flex;\n    align-items: stretch;\n    gap: 6px;\n    padding: 6px;\n    background: var(--chip);\n    backdrop-filter: blur(20px) saturate(140%);\n    -webkit-backdrop-filter: blur(20px) saturate(140%);\n    border: 1px solid var(--line);\n    border-radius: 999px;\n  }\n  .dock button {\n    appearance: none;\n    background: transparent;\n    border: none;\n    color: var(--ink);\n    font: inherit;\n    font-size: 11px;\n    letter-spacing: 0.18em;\n    text-transform: uppercase;\n    padding: 10px 16px 9px;\n    border-radius: 999px;\n    cursor: none;\n    opacity: 0.55;\n    transition: opacity 180ms ease, background 180ms ease;\n    display: flex;\n    align-items: center;\n    gap: 8px;\n  }\n  .dock button:hover { opacity: 0.9; }\n  .dock button.active {\n    background: var(--chip-hi);\n    opacity: 1;\n  }\n  .dock button .num {\n    font-family: \"SF Mono\", \"JetBrains Mono\", \"Menlo\", monospace;\n    font-size: 10px;\n    opacity: 0.55;\n  }\n\n  /* Caption — bottom-left tag describing current wallpaper */\n  .caption {\n    position: fixed;\n    left: 26px;\n    bottom: 28px;\n    z-index: 20;\n    max-width: 280px;\n    user-select: none;\n  }\n  .caption .eyebrow {\n    font-family: \"SF Mono\", \"JetBrains Mono\", \"Menlo\", monospace;\n    font-size: 10px;\n    letter-spacing: 0.22em;\n    text-transform: uppercase;\n    color: var(--dim);\n    margin-bottom: 6px;\n  }\n  .caption .title {\n    font-size: 22px;\n    font-weight: 500;\n    letter-spacing: -0.01em;\n    line-height: 1.1;\n  }\n  .caption .hint {\n    margin-top: 8px;\n    font-size: 11px;\n    letter-spacing: 0.12em;\n    text-transform: uppercase;\n    color: var(--dim);\n  }\n\n  /* Hint that fades */\n  .caption .title, .caption .eyebrow, .caption .hint {\n    transition: opacity 220ms ease, transform 220ms ease;\n  }\n\n  /* Help blurb top-right under clock */\n  .help {\n    position: fixed;\n    top: 70px;\n    right: 26px;\n    z-index: 20;\n    text-align: right;\n    font-family: \"SF Mono\", \"JetBrains Mono\", \"Menlo\", monospace;\n    font-size: 10px;\n    letter-spacing: 0.16em;\n    text-transform: uppercase;\n    color: var(--dim);\n    user-select: none;\n    line-height: 1.7;\n  }\n\n  /* Keyboard hint chips */\n  kbd {\n    display: inline-block;\n    padding: 2px 6px;\n    border: 1px solid var(--line);\n    border-radius: 4px;\n    font-family: inherit;\n    font-size: 10px;\n    color: var(--ink);\n    margin: 0 2px;\n  }\n\n  /* Fallback if WebGL fails */\n  .nogl {\n    position: fixed;\n    inset: 0;\n    display: none;\n    align-items: center;\n    justify-content: center;\n    background: #0a0a0c;\n    color: var(--ink);\n    font-size: 14px;\n    z-index: 40;\n  }\n<\u002Fstyle>\n<\u002Fhead>\n<body>\n\n<canvas id=\"gl\"><\u002Fcanvas>\n\n<div class=\"cursor\" id=\"cursor\"><\u002Fdiv>\n\n<div class=\"brand\">\n  <div class=\"mark\" aria-hidden=\"true\"><\u002Fdiv>\n  <div class=\"name\">Aether OS<\u002Fdiv>\n<\u002Fdiv>\n\n<div class=\"clock\">\n  <div class=\"time\" id=\"time\">00:00:00<\u002Fdiv>\n  <div class=\"date\" id=\"date\">— —<\u002Fdiv>\n<\u002Fdiv>\n\n<div class=\"help\">\n  <div>Move &nbsp; · &nbsp; Click &nbsp; · &nbsp; Drag<\u002Fdiv>\n  <div><kbd>1<\u002Fkbd><kbd>2<\u002Fkbd><kbd>3<\u002Fkbd><kbd>4<\u002Fkbd><kbd>5<\u002Fkbd> &nbsp;Switch<\u002Fdiv>\n<\u002Fdiv>\n\n<div class=\"caption\" id=\"caption\">\n  <div class=\"eyebrow\" id=\"eyebrow\">Wallpaper 01 / 05<\u002Fdiv>\n  <div class=\"title\" id=\"title\">Liquid Chrome<\u002Fdiv>\n  <div class=\"hint\" id=\"hint\">Cursor bends the metal<\u002Fdiv>\n<\u002Fdiv>\n\n<div class=\"dock\" id=\"dock\"><\u002Fdiv>\n\n<div class=\"nogl\" id=\"nogl\">Your browser doesn't support WebGL. Sorry.<\u002Fdiv>\n\n<script id=\"vs\" type=\"x-shader/x-vertex\">\nattribute vec2 a_pos;\nvoid main() { gl_Position = vec4(a_pos, 0.0, 1.0); }\n<\u002Fscript>\n\n<!-- =========================================================\n     SHADER 01 — LIQUID CHROME\n     Flowing chromatic metal that warps around the cursor.\n     ========================================================= -->\n<script id=\"fs-0\" type=\"x-shader/x-fragment\">\nprecision highp float;\nuniform vec2 u_res;\nuniform vec2 u_mouse;     // 0..1\nuniform vec2 u_mouseV;    // velocity-ish\nuniform float u_time;\nuniform float u_press;    // 0..1 mouse-down pulse\nuniform float u_click;    // ripple time since last click\n\n// hash & noise\nfloat hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\nfloat noise(vec2 p){\n  vec2 i = floor(p), f = fract(p);\n  vec2 u = f*f*(3.0-2.0*f);\n  return mix(mix(hash(i), hash(i+vec2(1.,0.)), u.x),\n             mix(hash(i+vec2(0.,1.)), hash(i+vec2(1.,1.)), u.x), u.y);\n}\nfloat fbm(vec2 p){\n  float v = 0.0, a = 0.5;\n  for(int i = 0; i < 5; i++){\n    v += a * noise(p);\n    p *= 2.02;\n    a *= 0.5;\n  }\n  return v;\n}\n\nvoid main(){\n  vec2 uv = gl_FragCoord.xy / u_res.xy;\n  vec2 p = uv;\n  p.x *= u_res.x / u_res.y;\n\n  vec2 m = u_mouse;\n  m.x *= u_res.x / u_res.y;\n\n  // distort coordinates around the mouse so the metal \"bulges\"\n  vec2 d = p - m;\n  float dist = length(d);\n  float pull = exp(-dist * 3.5) * (0.35 + 0.6 * u_press);\n  vec2 warped = p - normalize(d + 1e-5) * pull * 0.18;\n\n  // click ripple\n  float ripple = sin(dist * 22.0 - u_click * 8.0) * exp(-u_click * 1.6) * exp(-dist * 2.5);\n\n  // flowing field\n  float t = u_time * 0.18;\n  vec2 q = warped * 1.6 + vec2(t * 0.7, -t * 0.4);\n  float n1 = fbm(q + fbm(q + t));\n  float n2 = fbm(q * 1.7 - vec2(t, t * 0.5) + n1);\n  float field = n1 * 0.55 + n2 * 0.45 + ripple * 0.15;\n\n  // chrome bands — sharp sinusoid of the field\n  float bands = sin(field * 11.0 + u_time * 0.5);\n  bands = smoothstep(-0.5, 0.9, bands);\n\n  // base palette: deep teal -> cobalt -> warm steel -> highlight\n  vec3 c1 = vec3(0.04, 0.08, 0.13);\n  vec3 c2 = vec3(0.10, 0.22, 0.36);\n  vec3 c3 = vec3(0.55, 0.62, 0.70);\n  vec3 c4 = vec3(0.96, 0.94, 0.88);\n\n  vec3 col = mix(c1, c2, smoothstep(0.0, 0.55, field));\n  col = mix(col, c3, smoothstep(0.45, 0.85, field));\n  col = mix(col, c4, smoothstep(0.78, 1.05, field) * (0.45 + 0.55 * bands));\n\n  // iridescent edges from gradient magnitude (cheap)\n  float e = abs(fbm(q + 0.13) - fbm(q - 0.13));\n  vec3 irid = vec3(\n    0.5 + 0.5 * cos(6.2831 * (field + 0.00)),\n    0.5 + 0.5 * cos(6.2831 * (field + 0.33)),\n    0.5 + 0.5 * cos(6.2831 * (field + 0.66))\n  );\n  col += irid * e * 0.6;\n\n  // soft highlight halo around mouse\n  col += vec3(0.95, 0.92, 0.85) * exp(-dist * 5.0) * (0.10 + 0.4 * u_press);\n\n  // vignette\n  float v = smoothstep(1.2, 0.3, distance(uv, vec2(0.5)));\n  col *= mix(0.85, 1.0, v);\n\n  gl_FragColor = vec4(col, 1.0);\n}\n<\u002Fscript>\n\n<!-- =========================================================\n     SHADER 02 — PLASMA FIELD\n     Energy ribbons; clicks send shockwaves outward.\n     ========================================================= -->\n<script id=\"fs-1\" type=\"x-shader/x-fragment\">\nprecision highp float;\nuniform vec2 u_res;\nuniform vec2 u_mouse;\nuniform vec2 u_mouseV;\nuniform float u_time;\nuniform float u_press;\nuniform float u_click;\n\nvoid main(){\n  vec2 uv = (gl_FragCoord.xy - 0.5 * u_res.xy) / u_res.y;\n  vec2 m  = (u_mouse * u_res.xy - 0.5 * u_res.xy) / u_res.y;\n\n  vec2 d = uv - m;\n  float dist = length(d);\n\n  // shockwave ring\n  float wave = sin(dist * 30.0 - u_click * 14.0) * exp(-u_click * 1.2) * exp(-dist * 1.6);\n\n  // plasma — sum of sinusoids whose phases drift with mouse\n  float t = u_time * 0.55;\n  float p = 0.0;\n  p += sin(uv.x * 6.0 + t + m.x * 4.0);\n  p += sin(uv.y * 7.5 - t * 1.1 + m.y * 4.0);\n  p += sin((uv.x + uv.y) * 5.0 + t * 0.7);\n  p += sin(length(uv - m * 0.5) * 9.0 - t * 2.0);\n  p += wave * 1.6;\n  p *= 0.2;\n\n  // ribbon: take iso-lines of plasma\n  float ribbon = abs(fract(p * 3.0 + u_time * 0.05) - 0.5);\n  float lines = smoothstep(0.05, 0.0, ribbon - 0.02);\n\n  // colour: violet -> magenta -> cyan core\n  vec3 a = vec3(0.05, 0.02, 0.10);\n  vec3 b = vec3(0.45, 0.10, 0.70);\n  vec3 c = vec3(0.95, 0.30, 0.65);\n  vec3 e = vec3(0.30, 0.95, 1.00);\n\n  float k = 0.5 + 0.5 * sin(p * 3.1416);\n  vec3 col = mix(a, b, smoothstep(0.0, 0.55, k));\n  col = mix(col, c, smoothstep(0.45, 0.85, k));\n  col += e * lines * (0.4 + 0.6 * u_press);\n\n  // bright bloom around the cursor\n  float halo = exp(-dist * 4.0);\n  col += mix(vec3(0.7, 0.4, 1.0), vec3(0.3, 0.9, 1.0), u_press) * halo * 0.55;\n\n  // film grain\n  float g = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)) + u_time) * 43758.5453);\n  col += (g - 0.5) * 0.025;\n\n  // subtle vignette\n  float v = smoothstep(1.4, 0.4, length(uv));\n  col *= mix(0.7, 1.0, v);\n\n  gl_FragColor = vec4(col, 1.0);\n}\n<\u002Fscript>\n\n<!-- =========================================================\n     SHADER 03 — CRYSTAL LATTICE\n     Refractive grid that bends light near the cursor.\n     ========================================================= -->\n<script id=\"fs-2\" type=\"x-shader/x-fragment\">\nprecision highp float;\nuniform vec2 u_res;\nuniform vec2 u_mouse;\nuniform vec2 u_mouseV;\nuniform float u_time;\nuniform float u_press;\nuniform float u_click;\n\nfloat hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 45758.5); }\n\nvoid main(){\n  vec2 uv = (gl_FragCoord.xy - 0.5 * u_res.xy) / u_res.y;\n  vec2 m  = (u_mouse * u_res.xy - 0.5 * u_res.xy) / u_res.y;\n\n  // lens distortion near mouse — coordinates pulled toward it\n  vec2 d = uv - m;\n  float dist = length(d);\n  float lens = exp(-dist * 2.2) * (0.35 + 0.6 * u_press);\n  vec2 warped = uv - d * lens * 0.65;\n\n  // click pressure — radial wave that displaces grid outward\n  float wave = sin(dist * 12.0 - u_click * 6.0) * exp(-u_click * 1.4) * exp(-dist * 1.5);\n  warped += normalize(d + 1e-5) * wave * 0.06;\n\n  // triangular lattice via three rotated grids\n  float ang = 3.14159 / 3.0;\n  vec3 axes = vec3(0.0, ang, 2.0 * ang);\n  vec3 g;\n  for (int i = 0; i < 3; i++){\n    float a = axes[i];\n    vec2 r = vec2(cos(a), -sin(a)) * warped.x + vec2(sin(a), cos(a)) * warped.y;\n    float v = abs(fract(r.x * 7.0) - 0.5);\n    g[i] = v;\n  }\n  // distance to nearest lattice line in each direction\n  float lattice = min(min(g.x, g.y), g.z);\n  float line = smoothstep(0.06, 0.0, lattice - 0.005);\n\n  // cell ID for color variation\n  vec2 cell = floor(warped * 7.0);\n  float h = hash(cell);\n\n  // base: deep indigo background\n  vec3 bg = mix(vec3(0.03, 0.04, 0.09), vec3(0.06, 0.10, 0.18),\n                0.5 + 0.5 * sin(u_time * 0.2 + (warped.x + warped.y)));\n\n  // crystal facets — soft fills per cell, color shifts with proximity to mouse\n  float prox = exp(-distance(cell / 7.0, m) * 1.8);\n  vec3 facet = mix(vec3(0.10, 0.18, 0.30), vec3(0.65, 0.85, 1.00), h * 0.6 + prox * 0.6);\n  facet *= 0.25 + 0.45 * (0.5 + 0.5 * sin(u_time * 0.6 + h * 12.0));\n\n  vec3 col = bg + facet * 0.35;\n\n  // glowing edges — cyan-white\n  vec3 edge = mix(vec3(0.4, 0.75, 1.0), vec3(1.0, 0.95, 0.85), 0.4 + 0.6 * u_press);\n  col += edge * line * (0.6 + 0.6 * exp(-dist * 1.5));\n\n  // sparkle near cursor\n  float spark = step(0.995, hash(floor(warped * 60.0) + floor(u_time * 8.0)));\n  col += vec3(1.0) * spark * exp(-dist * 2.5) * 0.6;\n\n  gl_FragColor = vec4(col, 1.0);\n}\n<\u002Fscript>\n\n<!-- =========================================================\n     SHADER 04 — AURORA MIST\n     Soft volumetric gradients that drift toward the cursor.\n     ========================================================= -->\n<script id=\"fs-3\" type=\"x-shader/x-fragment\">\nprecision highp float;\nuniform vec2 u_res;\nuniform vec2 u_mouse;\nuniform vec2 u_mouseV;\nuniform float u_time;\nuniform float u_press;\nuniform float u_click;\n\nfloat hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\nfloat noise(vec2 p){\n  vec2 i = floor(p), f = fract(p);\n  vec2 u = f*f*(3.0-2.0*f);\n  return mix(mix(hash(i), hash(i+vec2(1.,0.)), u.x),\n             mix(hash(i+vec2(0.,1.)), hash(i+vec2(1.,1.)), u.x), u.y);\n}\nfloat fbm(vec2 p){\n  float v = 0.0, a = 0.55;\n  for (int i = 0; i < 6; i++){\n    v += a * noise(p);\n    p = p * 2.0 + vec2(13.0, 7.0);\n    a *= 0.5;\n  }\n  return v;\n}\n\nvoid main(){\n  vec2 uv = gl_FragCoord.xy / u_res.xy;\n  vec2 p = uv;\n  p.x *= u_res.x / u_res.y;\n  vec2 m = u_mouse; m.x *= u_res.x / u_res.y;\n\n  // attractor — flow lines lean toward mouse, speed scales with velocity\n  vec2 d = m - p;\n  float dist = length(d);\n  vec2 flow = normalize(d + 1e-5) * exp(-dist * 1.2) * 0.18;\n\n  float t = u_time * 0.08;\n  vec2 q = p * 1.8 + vec2(t * 0.5, -t) + flow * 1.2;\n\n  float n = fbm(q + fbm(q * 0.7 - t));\n  float n2 = fbm(q * 2.2 + n * 1.5);\n\n  // click bloom — temporary local brightness\n  float bloom = exp(-dist * 3.0) * exp(-u_click * 0.9);\n\n  // palette: midnight -> teal -> magenta -> peach\n  vec3 c0 = vec3(0.02, 0.04, 0.10);\n  vec3 c1 = vec3(0.05, 0.30, 0.45);\n  vec3 c2 = vec3(0.40, 0.20, 0.60);\n  vec3 c3 = vec3(0.95, 0.55, 0.70);\n  vec3 c4 = vec3(1.00, 0.90, 0.78);\n\n  float k = n * 0.65 + n2 * 0.35;\n  vec3 col = mix(c0, c1, smoothstep(0.10, 0.55, k));\n  col = mix(col, c2, smoothstep(0.45, 0.75, k));\n  col = mix(col, c3, smoothstep(0.65, 0.90, k));\n  col = mix(col, c4, smoothstep(0.85, 1.05, k + bloom * 0.6));\n\n  // aurora streaks — vertical-ish ribbons distorted by noise\n  float streak = sin((p.y + n * 1.5) * 9.0 + u_time * 0.3);\n  streak = smoothstep(0.55, 1.0, streak);\n  col += vec3(0.55, 0.85, 1.0) * streak * 0.18;\n\n  // cursor glow\n  col += vec3(1.0, 0.85, 0.95) * bloom * (0.25 + 0.5 * u_press);\n\n  // top-down darkening\n  col *= mix(0.7, 1.05, smoothstep(0.0, 0.6, uv.y));\n\n  gl_FragColor = vec4(col, 1.0);\n}\n<\u002Fscript>\n\n<!-- =========================================================\n     SHADER 05 — NEURAL WEB\n     Voronoi-style nodes connected by faint edges; pulses on click.\n     ========================================================= -->\n<script id=\"fs-4\" type=\"x-shader/x-fragment\">\nprecision highp float;\nuniform vec2 u_res;\nuniform vec2 u_mouse;\nuniform vec2 u_mouseV;\nuniform float u_time;\nuniform float u_press;\nuniform float u_click;\n\nvec2 hash2(vec2 p){\n  p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));\n  return fract(sin(p) * 43758.5453);\n}\n\nvoid main(){\n  vec2 uv = gl_FragCoord.xy / u_res.xy;\n  vec2 p = uv;\n  p.x *= u_res.x / u_res.y;\n  vec2 m = u_mouse; m.x *= u_res.x / u_res.y;\n\n  float scale = 7.0;\n  vec2 g = p * scale;\n  vec2 cell = floor(g);\n  vec2 f = fract(g);\n\n  // find two closest feature points (F1, F2) — gives both nodes and edges\n  float F1 = 8.0, F2 = 8.0;\n  vec2 closest = vec2(0.0);\n  for (int j = -1; j <= 1; j++){\n    for (int i = -1; i <= 1; i++){\n      vec2 nb = vec2(float(i), float(j));\n      vec2 r = hash2(cell + nb);\n      // animate node positions\n      r = 0.5 + 0.45 * sin(u_time * 0.6 + 6.2831 * r);\n      vec2 pt = nb + r - f;\n      float dd = dot(pt, pt);\n      if (dd < F1) { F2 = F1; F1 = dd; closest = cell + nb; }\n      else if (dd < F2) { F2 = dd; }\n    }\n  }\n  F1 = sqrt(F1); F2 = sqrt(F2);\n\n  // edges = where two cells meet (F2 - F1 small)\n  float edge = smoothstep(0.04, 0.0, F2 - F1);\n  // nodes = bright dots at feature points\n  float node = smoothstep(0.10, 0.0, F1);\n\n  // distance from cursor — pulses propagate outward through cells\n  float dist = distance(p, m);\n  float pulse = sin(dist * 10.0 - u_click * 7.0) * exp(-u_click * 1.0) * exp(-dist * 1.2);\n  float prox = exp(-dist * 2.0);\n\n  // base — near-black\n  vec3 col = vec3(0.018, 0.022, 0.04);\n\n  // soft cell tint based on cell id, brighter near cursor\n  float h = fract(sin(dot(closest, vec2(12.9898, 78.233))) * 43758.5453);\n  vec3 tint = mix(vec3(0.05, 0.20, 0.35), vec3(0.65, 0.30, 0.95), h);\n  col += tint * (0.07 + 0.18 * prox + 0.10 * pulse);\n\n  // edges — cool cyan that gets warm near cursor / on press\n  vec3 edgeCol = mix(vec3(0.40, 0.75, 1.00), vec3(1.0, 0.85, 0.55), u_press * 0.7 + prox * 0.5);\n  col += edgeCol * edge * (0.45 + 0.55 * prox + 0.35 * abs(pulse));\n\n  // nodes — bright cores\n  vec3 nodeCol = mix(vec3(0.6, 0.9, 1.0), vec3(1.0, 0.95, 0.85), prox);\n  col += nodeCol * node * (0.6 + 0.9 * prox + 0.5 * abs(pulse));\n\n  // travelling pulse ring\n  col += vec3(0.6, 0.8, 1.0) * smoothstep(0.06, 0.0, abs(pulse) - 0.02) * 0.6;\n\n  // cursor halo\n  col += vec3(0.7, 0.85, 1.0) * exp(-dist * 5.5) * (0.25 + 0.55 * u_press);\n\n  gl_FragColor = vec4(col, 1.0);\n}\n<\u002Fscript>\n\n<script>\n(() => {\n  const canvas = document.getElementById('gl');\n  const noglEl = document.getElementById('nogl');\n  const gl = canvas.getContext('webgl', { antialias: true, alpha: false, premultipliedAlpha: false })\n          || canvas.getContext('experimental-webgl');\n  if (!gl) {\n    noglEl.style.display = 'flex';\n    return;\n  }\n\n  // --- shader plumbing ---\n  function compile(type, src){\n    const s = gl.createShader(type);\n    gl.shaderSource(s, src);\n    gl.compileShader(s);\n    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {\n      console.error(gl.getShaderInfoLog(s), src);\n      return null;\n    }\n    return s;\n  }\n  function program(vsSrc, fsSrc){\n    const p = gl.createProgram();\n    const vs = compile(gl.VERTEX_SHADER, vsSrc);\n    const fs = compile(gl.FRAGMENT_SHADER, fsSrc);\n    gl.attachShader(p, vs); gl.attachShader(p, fs);\n    gl.linkProgram(p);\n    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {\n      console.error(gl.getProgramInfoLog(p));\n      return null;\n    }\n    return p;\n  }\n\n  const vsSrc = document.getElementById('vs').textContent;\n  const wallpapers = [\n    { title: \"Liquid Chrome\",   hint: \"Cursor bends the metal · Hold to pull harder\",       fsId: \"fs-0\" },\n    { title: \"Plasma Field\",    hint: \"Click to send shockwaves through the energy\",         fsId: \"fs-1\" },\n    { title: \"Crystal Lattice\", hint: \"Cursor refracts the grid · Click to fracture\",        fsId: \"fs-2\" },\n    { title: \"Aurora Mist\",     hint: \"The mist drifts toward you · Click for bloom\",        fsId: \"fs-3\" },\n    { title: \"Neural Web\",      hint: \"Click to send a pulse across the network\",            fsId: \"fs-4\" },\n  ];\n\n  const programs = wallpapers.map(w => program(vsSrc, document.getElementById(w.fsId).textContent));\n\n  // fullscreen quad\n  const buf = gl.createBuffer();\n  gl.bindBuffer(gl.ARRAY_BUFFER, buf);\n  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([\n    -1, -1,  1, -1, -1,  1,\n    -1,  1,  1, -1,  1,  1\n  ]), gl.STATIC_DRAW);\n\n  // resize\n  function resize(){\n    const dpr = Math.min(window.devicePixelRatio || 1, 2);\n    canvas.width  = Math.floor(window.innerWidth  * dpr);\n    canvas.height = Math.floor(window.innerHeight * dpr);\n    gl.viewport(0, 0, canvas.width, canvas.height);\n  }\n  resize();\n  window.addEventListener('resize', resize);\n\n  // input — mouse position is smoothed\n  const targetMouse = { x: 0.5, y: 0.5 };\n  const mouse = { x: 0.5, y: 0.5 };\n  const lastMouse = { x: 0.5, y: 0.5 };\n  const velocity = { x: 0, y: 0 };\n  let press = 0;       // 0..1, eased\n  let pressTarget = 0; // 0 or 1\n  let lastClickT = 100; // seconds since last click\n\n  const cursorEl = document.getElementById('cursor');\n\n  function setMouse(x, y){\n    targetMouse.x = x / window.innerWidth;\n    // GL y is bottom-up\n    targetMouse.y = 1.0 - y / window.innerHeight;\n    cursorEl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;\n  }\n  window.addEventListener('mousemove', e => setMouse(e.clientX, e.clientY));\n  window.addEventListener('touchmove', e => {\n    if (e.touches.length){\n      setMouse(e.touches[0].clientX, e.touches[0].clientY);\n    }\n  }, { passive: true });\n\n  window.addEventListener('mousedown', e => {\n    pressTarget = 1;\n    lastClickT = 0;\n    cursorEl.classList.add('press');\n  });\n  window.addEventListener('mouseup', () => {\n    pressTarget = 0;\n    cursorEl.classList.remove('press');\n  });\n  window.addEventListener('touchstart', () => { pressTarget = 1; lastClickT = 0; }, { passive: true });\n  window.addEventListener('touchend',   () => { pressTarget = 0; }, { passive: true });\n\n  // dock UI\n  const dock = document.getElementById('dock');\n  let active = 0;\n  wallpapers.forEach((w, i) => {\n    const b = document.createElement('button');\n    b.innerHTML = `<span class=\"num\">0${i+1}<\u002Fspan><span>${w.title}<\u002Fspan>`;\n    b.addEventListener('click', () => select(i));\n    dock.appendChild(b);\n  });\n\n  const titleEl = document.getElementById('title');\n  const eyebrowEl = document.getElementById('eyebrow');\n  const hintEl = document.getElementById('hint');\n\n  function select(i){\n    active = ((i % wallpapers.length) + wallpapers.length) % wallpapers.length;\n    [...dock.children].forEach((b, k) => b.classList.toggle('active', k === active));\n    const w = wallpapers[active];\n    titleEl.textContent = w.title;\n    eyebrowEl.textContent = `Wallpaper 0${active + 1} / 0${wallpapers.length}`;\n    hintEl.textContent = w.hint;\n  }\n  select(0);\n\n  window.addEventListener('keydown', e => {\n    const n = parseInt(e.key, 10);\n    if (n >= 1 && n <= wallpapers.length) select(n - 1);\n    else if (e.key === 'ArrowRight') select(active + 1);\n    else if (e.key === 'ArrowLeft')  select(active - 1);\n  });\n\n  // clock\n  const timeEl = document.getElementById('time');\n  const dateEl = document.getElementById('date');\n  function pad(n){ return String(n).padStart(2, '0'); }\n  function tickClock(){\n    const d = new Date();\n    timeEl.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;\n    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];\n    const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];\n    dateEl.textContent = `${days[d.getDay()]} · ${pad(d.getDate())} ${months[d.getMonth()]}`;\n  }\n  tickClock();\n  setInterval(tickClock, 1000);\n\n  // hide caption on idle (so the wallpaper breathes)\n  let idleTimer;\n  const captionEl = document.getElementById('caption');\n  function poke(){\n    captionEl.style.opacity = 1;\n    clearTimeout(idleTimer);\n    idleTimer = setTimeout(() => { captionEl.style.opacity = 0.0; }, 4500);\n  }\n  captionEl.style.transition = 'opacity 600ms ease';\n  poke();\n  window.addEventListener('mousemove', poke);\n  window.addEventListener('keydown', poke);\n  window.addEventListener('mousedown', poke);\n\n  // render loop\n  let t0 = performance.now();\n  let prevT = t0;\n  function frame(now){\n    const t = (now - t0) / 1000;\n    const dt = Math.max(0.001, (now - prevT) / 1000);\n    prevT = now;\n\n    // smoothing\n    const ease = 1 - Math.pow(0.001, dt); // ~time-based lerp\n    mouse.x += (targetMouse.x - mouse.x) * ease;\n    mouse.y += (targetMouse.y - mouse.y) * ease;\n\n    velocity.x = (mouse.x - lastMouse.x) / dt;\n    velocity.y = (mouse.y - lastMouse.y) / dt;\n    lastMouse.x = mouse.x; lastMouse.y = mouse.y;\n\n    press += (pressTarget - press) * (1 - Math.pow(0.0001, dt));\n    lastClickT += dt;\n\n    const prog = programs[active];\n    if (!prog) { requestAnimationFrame(frame); return; }\n    gl.useProgram(prog);\n\n    const aPos = gl.getAttribLocation(prog, 'a_pos');\n    gl.bindBuffer(gl.ARRAY_BUFFER, buf);\n    gl.enableVertexAttribArray(aPos);\n    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);\n\n    gl.uniform2f(gl.getUniformLocation(prog, 'u_res'), canvas.width, canvas.height);\n    gl.uniform2f(gl.getUniformLocation(prog, 'u_mouse'), mouse.x, mouse.y);\n    gl.uniform2f(gl.getUniformLocation(prog, 'u_mouseV'), velocity.x, velocity.y);\n    gl.uniform1f(gl.getUniformLocation(prog, 'u_time'), t);\n    gl.uniform1f(gl.getUniformLocation(prog, 'u_press'), press);\n    gl.uniform1f(gl.getUniformLocation(prog, 'u_click'), lastClickT);\n\n    gl.drawArrays(gl.TRIANGLES, 0, 6);\n    requestAnimationFrame(frame);\n  }\n  requestAnimationFrame(frame);\n})();\n<\u002Fscript>\n\n\n\n<\u002Fbody><\u002Fhtml>"
+  </script>
+</body>
+</html>

@@ -98,8 +98,8 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
-      <div className="flex h-16 items-center border-b border-gray-200 px-6">
+    <aside className="relative z-10 flex h-full w-64 flex-col border-r border-white/20 bg-white/10 backdrop-blur-xl">
+      <div className="flex h-16 items-center border-b border-white/20 px-6">
         <Image src="/logo-patakus.png" alt="Patakus" width={120} height={42} priority />
       </div>
 
@@ -120,8 +120,8 @@ export function Sidebar() {
                     className={clsx(
                       'w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        ? 'bg-white/20 text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
                     )}
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
@@ -143,8 +143,8 @@ export function Sidebar() {
                               className={clsx(
                                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
                                 childActive
-                                  ? 'bg-blue-100 text-blue-700 font-medium'
-                                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                                  ? 'bg-white/20 text-white font-medium'
+                                  : 'text-white/60 hover:bg-white/10 hover:text-white'
                               )}
                             >
                               <ChildIcon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -171,8 +171,8 @@ export function Sidebar() {
                   className={clsx(
                     'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-white/20 text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
                   )}
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" />
@@ -191,8 +191,8 @@ export function Sidebar() {
       </nav>
 
       {user && (
-        <div className="border-t border-gray-200 px-4 py-3">
-          <p className="text-xs text-gray-500">
+        <div className="border-t border-white/20 px-4 py-3">
+          <p className="text-xs text-white/50">
             {user.role === 'SUPER_ADMIN'
               ? 'Super Admin'
               : user.role === 'CLIENT_ADMIN'
