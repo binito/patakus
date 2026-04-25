@@ -26,7 +26,7 @@ async function bootstrap() {
 
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
-    : ['http://localhost:3000'];
+    : ['http://localhost:3002'];
 
   app.enableCors({
     origin: allowedOrigins,
@@ -37,7 +37,7 @@ async function bootstrap() {
   // Servir ficheiros de upload estaticamente
   app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });
 
-  const port = process.env.PORT ?? 3001;
+  const port = process.env.PORT ?? 3003;
   await app.listen(port);
   console.log(`API Pataku's a correr em http://localhost:${port}`);
 }
