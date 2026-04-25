@@ -37,7 +37,7 @@ interface ShortageReport {
 const statusConfig = {
   OPEN:     { label: 'Em aberto',        color: 'bg-red-100 text-red-700',    icon: Clock },
   ORDERED:  { label: 'Em processamento', color: 'bg-yellow-100 text-yellow-700', icon: Truck },
-  RESOLVED: { label: 'Entregue',         color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
+  RESOLVED: { label: 'Entregue',         color: 'bg-green-500/15 text-green-400', icon: CheckCircle2 },
 };
 
 const nextStatus: Record<string, { status: string; label: string } | null> = {
@@ -145,7 +145,7 @@ export default function ConsumablesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Consumíveis</h1>
+        <h1 className="text-2xl font-bold text-gray-100">Consumíveis</h1>
         <p className="text-sm text-gray-500">Gestão de produtos atribuídos e faltas reportadas</p>
       </div>
 
@@ -167,7 +167,7 @@ export default function ConsumablesPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-2 border-b border-border">
         {([
           { key: 'stock', label: 'Produtos atribuídos' },
           { key: 'reports', label: `Faltas reportadas${openCount > 0 ? ` (${openCount})` : ''}` },
@@ -178,8 +178,8 @@ export default function ConsumablesPage() {
             onClick={() => setTab(t.key)}
             className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
               tab === t.key
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary-400 text-primary-400'
+                : 'border-transparent text-gray-500 hover:text-gray-300'
             }`}
           >
             {t.label}
@@ -197,7 +197,7 @@ export default function ConsumablesPage() {
                 <select
                   value={selectedClient}
                   onChange={e => setSelectedClient(e.target.value)}
-                  className="w-full appearance-none rounded-lg border border-gray-300 bg-white pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full appearance-none rounded-lg border border-border bg-surface-2 pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Seleccionar cliente...</option>
                   {clients?.map(c => (
@@ -226,7 +226,7 @@ export default function ConsumablesPage() {
               </div>
             ) : stockLoading ? (
               <div className="p-4 space-y-3">
-                {[1, 2, 3].map(i => <div key={i} className="h-12 animate-pulse rounded-md bg-gray-100" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-12 animate-pulse rounded-md bg-surface-3" />)}
               </div>
             ) : !stock?.length ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-400">
@@ -245,7 +245,7 @@ export default function ConsumablesPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="border-b border-gray-100 bg-gray-50">
+                  <thead className="border-b border-border/50 bg-surface-1">
                     <tr className="text-left text-xs font-medium text-gray-500">
                       <th className="px-6 py-3">Produto</th>
                       <th className="px-6 py-3">SKU</th>
@@ -255,16 +255,16 @@ export default function ConsumablesPage() {
                       {isSuperAdmin && <th className="px-6 py-3"></th>}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-border/30">
                     {stock.map(s => {
                       const low = s.quantity <= s.minQuantity;
                       const pct = s.minQuantity > 0 ? Math.min((s.quantity / s.minQuantity) * 100, 100) : 100;
                       return (
-                        <tr key={s.id} className={low ? 'bg-red-50/60' : 'hover:bg-gray-50'}>
-                          <td className="px-6 py-4 font-medium text-gray-900">{s.product?.name}</td>
+                        <tr key={s.id} className={low ? 'bg-red-50/60' : 'hover:bg-surface-1'}>
+                          <td className="px-6 py-4 font-medium text-gray-100">{s.product?.name}</td>
                           <td className="px-6 py-4 text-gray-400 text-xs">{s.product?.sku ?? '—'}</td>
                           <td className="px-6 py-4">
-                            <span className={`font-semibold ${low ? 'text-red-600' : 'text-gray-900'}`}>
+                            <span className={`font-semibold ${low ? 'text-red-600' : 'text-gray-100'}`}>
                               {s.quantity} <span className="font-normal text-gray-400 text-xs">{s.product?.unit}</span>
                             </span>
                           </td>
@@ -316,7 +316,7 @@ export default function ConsumablesPage() {
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   reportFilter === s
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                    : 'bg-surface-2 border border-border text-gray-400 hover:bg-surface-1'
                 }`}
               >
                 {s === 'ALL' ? 'Todos' : statusConfig[s].label}
@@ -326,7 +326,7 @@ export default function ConsumablesPage() {
 
           {reportsLoading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse rounded-xl bg-surface-3" />)}
             </div>
           ) : !filteredReports.length ? (
             <Card>
@@ -346,11 +346,11 @@ export default function ConsumablesPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold text-gray-900 text-sm">
+                          <p className="font-semibold text-gray-100 text-sm">
                             {r.stock?.product?.name ?? '—'}
                           </p>
                           {isSuperAdmin && clientName && (
-                            <span className="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">
+                            <span className="text-xs bg-surface-3 text-gray-400 ring-1 ring-border rounded-full px-2 py-0.5">
                               {clientName}
                             </span>
                           )}
@@ -405,19 +405,19 @@ export default function ConsumablesPage() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Produto *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Produto *</label>
 
               {/* Combobox com pesquisa */}
               <div className="relative">
                 <div
-                  className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm cursor-text ${
-                    productDropOpen ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-300'
+                  className={`flex items-center gap-2 rounded-lg border bg-surface-2 px-3 py-2 text-sm cursor-text ${
+                    productDropOpen ? 'border-blue-500 ring-2 ring-blue-500' : 'border-border'
                   }`}
                   onClick={() => { setProductDropOpen(true); setTimeout(() => searchRef.current?.focus(), 0); }}
                 >
                   {addProductId ? (
                     <>
-                      <span className="flex-1 text-gray-900">{addProductName}</span>
+                      <span className="flex-1 text-gray-100">{addProductName}</span>
                       <button
                         type="button"
                         onClick={e => {
@@ -426,7 +426,7 @@ export default function ConsumablesPage() {
                           setProductSearch(''); setProductDropOpen(true);
                           setTimeout(() => searchRef.current?.focus(), 0);
                         }}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-gray-400 hover:text-gray-400"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -450,7 +450,7 @@ export default function ConsumablesPage() {
                   <>
                     {/* overlay para fechar ao clicar fora */}
                     <div className="fixed inset-0 z-10" onClick={() => setProductDropOpen(false)} />
-                    <ul className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-52 overflow-y-auto text-sm">
+                    <ul className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-surface-2 shadow-lg max-h-52 overflow-y-auto text-sm">
                       {availableProducts
                         .filter(p =>
                           productSearch === '' ||
@@ -468,7 +468,7 @@ export default function ConsumablesPage() {
                             }}
                             className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-blue-50"
                           >
-                            <span className="text-gray-900">{p.name}</span>
+                            <span className="text-gray-100">{p.name}</span>
                             <span className="text-xs text-gray-400">{p.sku ?? p.unit}</span>
                           </li>
                         ))}
@@ -490,30 +490,30 @@ export default function ConsumablesPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Qtd. actual</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Qtd. actual</label>
                 <input
                   type="number"
                   min={0}
                   value={addQty}
                   onChange={e => setAddQty(Number(e.target.value))}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Qtd. mínima</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Qtd. mínima</label>
                 <input
                   type="number"
                   min={0}
                   value={addMin}
                   onChange={e => setAddMin(Number(e.target.value))}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
             <p className="text-xs text-gray-400">
               Quando a quantidade actual descer abaixo do mínimo, o sistema alerta para falta de stock.
             </p>
-            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-2 border-t border-border/50">
               <Button variant="ghost" onClick={() => setAddModal(false)}>Cancelar</Button>
               <Button
                 onClick={() => addStock()}

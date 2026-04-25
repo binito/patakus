@@ -151,7 +151,7 @@ export default function OleosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Controlo do Óleo da Fritura</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Controlo do Óleo da Fritura</h1>
           <p className="text-sm text-gray-500">Controlo de compostos polares (R6)</p>
         </div>
         <Button onClick={() => setModalOpen(true)} className="gap-2">
@@ -162,9 +162,9 @@ export default function OleosPage() {
       <Card>
         <div className="flex flex-wrap gap-3 items-end">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Período</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Período</label>
             <select value={timeRange} onChange={e => setTimeRange(e.target.value as TimeRange)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
               <option value="week">Última semana</option>
               <option value="month">Último mês</option>
               <option value="3months">Últimos 3 meses</option>
@@ -174,14 +174,14 @@ export default function OleosPage() {
           {timeRange === 'custom' && (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">De</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">De</label>
                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Até</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Até</label>
                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
             </>
           )}
@@ -216,7 +216,7 @@ export default function OleosPage() {
 
       <Card padding="none">
         {isLoading ? (
-          <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-gray-100" />)}</div>
+          <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-surface-3" />)}</div>
         ) : !records.length ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <Flame className="mb-3 h-10 w-10 opacity-40" />
@@ -226,7 +226,7 @@ export default function OleosPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+              <thead className="border-b border-border/50 bg-surface-1">
                 <tr className="text-left text-xs font-medium text-gray-500">
                   <th className="px-4 py-3">Data</th>
                   <th className="px-4 py-3">Fritadeira</th>
@@ -238,14 +238,14 @@ export default function OleosPage() {
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/30">
                 {records.map(r => {
                   const res = RESULTADO_LABELS[r.resultado];
                   return (
-                    <tr key={r.id} className={r.resultado >= 4 ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'}>
-                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{format(new Date(r.data), 'dd/MM/yyyy')}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{r.fritadeira}</td>
-                      <td className="px-4 py-3 text-gray-600">{r.temperatura}°C</td>
+                    <tr key={r.id} className={r.resultado >= 4 ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-surface-1'}>
+                      <td className="px-4 py-3 text-gray-300 whitespace-nowrap">{format(new Date(r.data), 'dd/MM/yyyy')}</td>
+                      <td className="px-4 py-3 font-medium text-gray-100">{r.fritadeira}</td>
+                      <td className="px-4 py-3 text-gray-400">{r.temperatura}°C</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold ${res.color} ${res.bg}`}>{r.resultado}</span>
                       </td>
@@ -282,7 +282,7 @@ export default function OleosPage() {
             error={errors.temperatura?.message}
             {...register('temperatura', { required: 'Campo obrigatório', valueAsNumber: true })} />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Resultado (compostos polares) *</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Resultado (compostos polares) *</label>
             <div className="space-y-2">
               {Object.entries(RESULTADO_LABELS).map(([k, v]) => (
                 <label key={k} className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${v.bg} border-transparent`}>

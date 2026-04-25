@@ -139,7 +139,7 @@ export default function DesinfecaoPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Registo de Desinfeção</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Registo de Desinfeção</h1>
           <p className="text-sm text-gray-500">Produtos destinados a consumir crus (R4)</p>
         </div>
         <Button onClick={() => setModalOpen(true)} className="gap-2">
@@ -150,9 +150,9 @@ export default function DesinfecaoPage() {
       <Card>
         <div className="flex flex-wrap gap-3 items-end">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Período</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Período</label>
             <select value={timeRange} onChange={e => setTimeRange(e.target.value as TimeRange)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
               <option value="week">Última semana</option>
               <option value="month">Último mês</option>
               <option value="3months">Últimos 3 meses</option>
@@ -162,14 +162,14 @@ export default function DesinfecaoPage() {
           {timeRange === 'custom' && (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">De</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">De</label>
                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Até</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Até</label>
                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
             </>
           )}
@@ -189,7 +189,7 @@ export default function DesinfecaoPage() {
 
       <Card padding="none">
         {isLoading ? (
-          <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-gray-100" />)}</div>
+          <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-surface-3" />)}</div>
         ) : !records.length ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <FlaskConical className="mb-3 h-10 w-10 opacity-40" />
@@ -199,7 +199,7 @@ export default function DesinfecaoPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+              <thead className="border-b border-border/50 bg-surface-1">
                 <tr className="text-left text-xs font-medium text-gray-500">
                   <th className="px-4 py-3">Data</th>
                   <th className="px-4 py-3">Géneros Alimentícios</th>
@@ -211,15 +211,15 @@ export default function DesinfecaoPage() {
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/30">
                 {records.map(r => (
-                  <tr key={r.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{format(new Date(r.data), 'dd/MM/yyyy')}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{r.generosAlimenticios}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.nomeDesinfetante}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.dose}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.quantidadeAgua}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.tempoAtuacao}</td>
+                  <tr key={r.id} className="hover:bg-surface-1">
+                    <td className="px-4 py-3 text-gray-300 whitespace-nowrap">{format(new Date(r.data), 'dd/MM/yyyy')}</td>
+                    <td className="px-4 py-3 font-medium text-gray-100">{r.generosAlimenticios}</td>
+                    <td className="px-4 py-3 text-gray-400">{r.nomeDesinfetante}</td>
+                    <td className="px-4 py-3 text-gray-400">{r.dose}</td>
+                    <td className="px-4 py-3 text-gray-400">{r.quantidadeAgua}</td>
+                    <td className="px-4 py-3 text-gray-400">{r.tempoAtuacao}</td>
                     <td className="px-4 py-3 text-gray-500">{r.operator.name}</td>
                     <td className="px-4 py-3">
                       <button onClick={() => { if (window.confirm('Eliminar registo?')) deleteMutation.mutate(r.id); }}

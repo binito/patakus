@@ -96,7 +96,7 @@ export default function ShareQrModal({ open, onClose, type, label, params, clien
   const isSheet = variant === 'sheet';
 
   const content = (
-    <div className={isSheet ? 'bg-white rounded-t-2xl p-6 pb-10 space-y-4' : 'space-y-4'} onClick={e => e.stopPropagation()}>
+    <div className={isSheet ? 'bg-surface-2 rounded-t-2xl p-6 pb-10 space-y-4' : 'space-y-4'} onClick={e => e.stopPropagation()}>
       {isSheet && <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-2" />}
 
       <div className="flex items-start justify-between">
@@ -107,7 +107,7 @@ export default function ShareQrModal({ open, onClose, type, label, params, clien
           </p>
           <p className="text-xs text-gray-500 mt-0.5">{label}</p>
         </div>
-        <button onClick={onClose} className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+        <button onClick={onClose} className="p-1 rounded-md text-gray-400 hover:text-gray-400 hover:bg-surface-3">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -121,12 +121,12 @@ export default function ShareQrModal({ open, onClose, type, label, params, clien
 
       {!loading && shareId && (
         <>
-          <div ref={qrRef} className="flex justify-center p-4 bg-white border border-gray-200 rounded-xl">
+          <div ref={qrRef} className="flex justify-center p-4 bg-surface-2 border border-gray-200 rounded-xl">
             <QRCode value={shareUrl} size={180} />
           </div>
 
           <div className="flex items-center gap-2 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2">
-            <span className="flex-1 text-xs text-gray-600 truncate">{shareUrl}</span>
+            <span className="flex-1 text-xs text-gray-400 truncate">{shareUrl}</span>
             <button onClick={copy} className="shrink-0 p-1 text-gray-400 hover:text-blue-600">
               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
             </button>
@@ -158,7 +158,7 @@ export default function ShareQrModal({ open, onClose, type, label, params, clien
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface-2 rounded-2xl shadow-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
         {content}
       </div>
     </div>

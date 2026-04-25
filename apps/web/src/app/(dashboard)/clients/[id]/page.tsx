@@ -48,7 +48,7 @@ export default function ClientDetailPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
-              <div className="h-32 animate-pulse rounded-md bg-gray-100" />
+              <div className="h-32 animate-pulse rounded-md bg-surface-3" />
             </Card>
           ))}
         </div>
@@ -63,7 +63,7 @@ export default function ClientDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{client?.name ?? 'Cliente'}</h1>
+          <h1 className="text-2xl font-bold text-gray-100">{client?.name ?? 'Cliente'}</h1>
           {client?.nif && <p className="text-sm text-gray-500">NIF: {client.nif}</p>}
         </div>
         {client && (
@@ -79,15 +79,15 @@ export default function ClientDetailPage() {
           <dl className="space-y-2 text-sm">
             <div>
               <dt className="text-gray-500">E-mail</dt>
-              <dd className="font-medium text-gray-900">{client?.email ?? '—'}</dd>
+              <dd className="font-medium text-gray-100">{client?.email ?? '—'}</dd>
             </div>
             <div>
               <dt className="text-gray-500">Telefone</dt>
-              <dd className="font-medium text-gray-900">{client?.phone ?? '—'}</dd>
+              <dd className="font-medium text-gray-100">{client?.phone ?? '—'}</dd>
             </div>
             <div>
               <dt className="text-gray-500">Cadastro</dt>
-              <dd className="font-medium text-gray-900">
+              <dd className="font-medium text-gray-100">
                 {client?.createdAt
                   ? format(new Date(client.createdAt), "d 'de' MMM 'de' yyyy", { locale: ptBR })
                   : '—'}
@@ -109,7 +109,7 @@ export default function ClientDetailPage() {
             <ul className="space-y-2">
               {areas.map((area) => (
                 <li key={area.id} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-900">{area.name}</span>
+                  <span className="text-sm text-gray-100">{area.name}</span>
                   <Badge status={area.active ? 'ACTIVE' : 'INACTIVE'} />
                 </li>
               ))}
@@ -130,7 +130,7 @@ export default function ClientDetailPage() {
             <ul className="space-y-2">
               {recentAnomalies.map((a) => (
                 <li key={a.id} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-900 truncate max-w-[140px]">{a.title}</span>
+                  <span className="text-sm text-gray-100 truncate max-w-[140px]">{a.title}</span>
                   <Badge status={a.status} />
                 </li>
               ))}
@@ -152,7 +152,7 @@ export default function ClientDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-left text-xs font-medium text-gray-500">
+                <tr className="border-b border-border/50 text-left text-xs font-medium text-gray-500">
                   <th className="pb-3">Template</th>
                   <th className="pb-3">Área</th>
                   <th className="pb-3">Executado por</th>
@@ -160,10 +160,10 @@ export default function ClientDetailPage() {
                   <th className="pb-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/30">
                 {recentChecklists.map((cl) => (
                   <tr key={cl.id}>
-                    <td className="py-3 font-medium text-gray-900">{cl.templateId}</td>
+                    <td className="py-3 font-medium text-gray-100">{cl.templateId}</td>
                     <td className="py-3 text-gray-500">{cl.area?.name ?? cl.areaId}</td>
                     <td className="py-3 text-gray-500">{cl.operator?.name ?? cl.operatorId}</td>
                     <td className="py-3 text-gray-500">

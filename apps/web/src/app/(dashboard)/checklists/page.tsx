@@ -326,7 +326,7 @@ export default function ChecklistsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Checklists</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Checklists</h1>
           <p className="text-sm text-gray-500">Templates e histórico de execuções</p>
         </div>
         <Button onClick={() => setModalOpen(true)} className="flex items-center gap-2">
@@ -334,11 +334,11 @@ export default function ChecklistsPage() {
         </Button>
       </div>
 
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-2 border-b border-border">
         {(['templates', 'history'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              tab === t ? 'border-primary-400 text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-300'
             }`}
           >
             {t === 'templates' ? <ClipboardList className="h-4 w-4" /> : <ClipboardCheck className="h-4 w-4" />}
@@ -353,7 +353,7 @@ export default function ChecklistsPage() {
           {tplLoading ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i}><div className="h-20 animate-pulse rounded-md bg-gray-100" /></Card>
+                <Card key={i}><div className="h-20 animate-pulse rounded-md bg-surface-3" /></Card>
               ))}
             </div>
           ) : !templates?.length ? (
@@ -371,7 +371,7 @@ export default function ChecklistsPage() {
               {templates.map(tpl => (
                 <Card key={tpl.id}>
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-base font-semibold text-gray-900 leading-snug">{tpl.name}</h3>
+                    <h3 className="text-base font-semibold text-gray-100 leading-snug">{tpl.name}</h3>
                     <div className="flex items-center gap-1 shrink-0">
                       <button onClick={() => openEdit(tpl)}
                         className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -386,7 +386,7 @@ export default function ChecklistsPage() {
                     </div>
                   </div>
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${freqColor[tpl.frequency] ?? 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${freqColor[tpl.frequency] ?? 'bg-surface-3 text-gray-400'}`}>
                       {freqLabel[tpl.frequency] ?? tpl.frequency}
                     </span>
                     <span className="text-xs text-gray-400">{tpl.tasks?.length ?? 0} tarefas</span>
@@ -415,7 +415,7 @@ export default function ChecklistsPage() {
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     timeRange === opt.value
                       ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                      : 'bg-surface-2 border border-border text-gray-400 hover:bg-surface-1'
                   }`}
                 >
                   {opt.label}
@@ -427,7 +427,7 @@ export default function ChecklistsPage() {
               <select
                 value={filterTemplate}
                 onChange={e => { setFilterTemplate(e.target.value); setSelected(new Set()); }}
-                className="rounded-lg border border-gray-300 px-3 py-1 text-xs bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg border border-border px-3 py-1 text-xs bg-surface-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Todas as checklists</option>
                 {Array.from(new Map(executions.map(ex => [ex.templateId, ex.template?.name ?? ex.templateId]))).map(([id, name]) => (
@@ -440,7 +440,7 @@ export default function ChecklistsPage() {
               type="button"
               onClick={() => setShowShare(true)}
               disabled={!filtered.length}
-              className="ml-auto flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+              className="ml-auto flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-gray-400 hover:bg-surface-1 disabled:opacity-40"
             >
               <QrCode className="h-3.5 w-3.5" /> Partilhar
             </button>
@@ -452,7 +452,7 @@ export default function ChecklistsPage() {
               <span className="text-sm font-medium text-blue-700">{selected.size} seleccionado{selected.size !== 1 ? 's' : ''}</span>
               <div className="flex items-center gap-2 ml-auto">
                 <button onClick={exportSelectedCsv}
-                  className="flex items-center gap-1.5 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50">
+                  className="flex items-center gap-1.5 rounded-lg border border-blue-300 bg-surface-2 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50">
                   <Download className="h-3.5 w-3.5" /> Exportar CSV
                 </button>
                 <button onClick={printSelected}
@@ -470,7 +470,7 @@ export default function ChecklistsPage() {
             {execLoading ? (
               <div className="space-y-px p-4">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-14 animate-pulse rounded-md bg-gray-100" />
+                  <div key={i} className="h-14 animate-pulse rounded-md bg-surface-3" />
                 ))}
               </div>
             ) : !filtered.length ? (
@@ -481,11 +481,11 @@ export default function ChecklistsPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="border-b border-gray-100 bg-gray-50">
+                  <thead className="border-b border-border/50 bg-surface-1">
                     <tr className="text-left text-xs font-medium text-gray-500">
                       <th className="px-4 py-3">
                         <input type="checkbox" checked={allSelected} onChange={toggleAll}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+                          className="rounded border-border text-blue-600 focus:ring-primary-500 cursor-pointer" />
                       </th>
                       <th className="px-4 py-3">Checklist</th>
                       <th className="px-4 py-3">Área</th>
@@ -495,18 +495,18 @@ export default function ChecklistsPage() {
                       <th className="px-4 py-3"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-border/30">
                     {filtered.map(ex => {
                       const doneCount = ex.taskResults?.filter(r => r.done).length ?? 0;
                       const total = ex.taskResults?.length ?? 0;
                       const isSelected = selected.has(ex.id);
                       return (
-                        <tr key={ex.id} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50/60' : ''}`}>
+                        <tr key={ex.id} className={`hover:bg-surface-1 ${isSelected ? 'bg-blue-50/60' : ''}`}>
                           <td className="px-4 py-3">
                             <input type="checkbox" checked={isSelected} onChange={() => toggleOne(ex.id)}
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+                              className="rounded border-border text-blue-600 focus:ring-primary-500 cursor-pointer" />
                           </td>
-                          <td className="px-4 py-4 font-medium text-gray-900">{ex.template?.name ?? '—'}</td>
+                          <td className="px-4 py-4 font-medium text-gray-100">{ex.template?.name ?? '—'}</td>
                           <td className="px-4 py-4 text-gray-500">{ex.area?.name ?? '—'}</td>
                           <td className="px-4 py-4 text-gray-500">{ex.operator?.name ?? '—'}</td>
                           <td className="px-4 py-4 text-gray-500">
@@ -538,23 +538,23 @@ export default function ChecklistsPage() {
       <Modal open={modalOpen} onClose={closeModal} title={editingTemplate ? 'Editar Template' : 'Novo Template de Checklist'} size="lg">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Nome *</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Limpeza diária cozinha"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Área *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Área *</label>
               <select value={areaId} onChange={e => setAreaId(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-surface-2">
                 <option value="">Seleccionar...</option>
                 {areas?.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Frequência</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Frequência</label>
               <select value={frequency} onChange={e => setFrequency(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-surface-2">
                 <option value="DAILY">Diária</option>
                 <option value="WEEKLY">Semanal</option>
                 <option value="MONTHLY">Mensal</option>
@@ -563,7 +563,7 @@ export default function ChecklistsPage() {
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">Tarefas *</label>
+              <label className="text-sm font-medium text-gray-300">Tarefas *</label>
               <button onClick={addTask} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700">
                 <Plus className="h-3 w-3" /> Adicionar tarefa
               </button>
@@ -575,7 +575,7 @@ export default function ChecklistsPage() {
                   <span className="text-xs text-gray-400 w-5 shrink-0">{i + 1}.</span>
                   <input value={task.description} onChange={e => updateTask(task.id, e.target.value)}
                     placeholder="Descrição da tarefa"
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } }} />
                   {tasks.length > 1 && (
                     <button onClick={() => removeTask(task.id)} className="text-gray-300 hover:text-red-400">
@@ -597,11 +597,11 @@ export default function ChecklistsPage() {
                 onClick={() => setIsDefault(v => !v)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDefault ? 'bg-amber-500' : 'bg-gray-200'}`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isDefault ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-surface-2 shadow transition-transform ${isDefault ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
           )}
-          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-2 border-t border-border/50">
             <Button variant="ghost" onClick={closeModal}>Cancelar</Button>
             {editingTemplate
               ? <Button onClick={() => saveEdit()} loading={isSaving} disabled={!canSubmit}>Guardar alterações</Button>
@@ -613,11 +613,11 @@ export default function ChecklistsPage() {
       {/* Modal confirmação eliminar */}
       <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Eliminar Template" size="sm">
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-400">
             Tens a certeza que queres eliminar <span className="font-semibold">"{deleteConfirm?.name}"</span>?
             Esta acção não pode ser revertida.
           </p>
-          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-2 border-t border-border/50">
             <Button variant="ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</Button>
             <button onClick={() => deleteConfirm && deleteTemplate(deleteConfirm.id)} disabled={isDeleting}
               className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
@@ -631,7 +631,7 @@ export default function ChecklistsPage() {
       {reportEntry && (
         <Modal open={!!reportEntry} onClose={() => setReportEntry(null)} title="Relatório de Checklist" size="lg">
           <div className="space-y-4">
-            <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <div className="rounded-lg bg-surface-1 border border-border p-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <div><span className="text-gray-500">Checklist:</span> <span className="font-medium">{reportEntry.template.name}</span></div>
               <div><span className="text-gray-500">Área:</span> <span className="font-medium">{reportEntry.area.name}</span></div>
               <div><span className="text-gray-500">Operador:</span> <span className="font-medium">{reportEntry.operator.name}</span></div>
@@ -648,9 +648,9 @@ export default function ChecklistsPage() {
                 </span>
               </div>
             </div>
-            <div className="rounded-lg border border-gray-200 overflow-hidden">
+            <div className="rounded-lg border border-border overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-surface-1 border-b border-border">
                   <tr className="text-left text-xs font-medium text-gray-500">
                     <th className="px-4 py-2.5">#</th>
                     <th className="px-4 py-2.5">Tarefa</th>
@@ -658,7 +658,7 @@ export default function ChecklistsPage() {
                     <th className="px-4 py-2.5">Notas</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-border/50">
                   {reportEntry.taskResults.map((r, i) => (
                     <tr key={r.id} className={r.done ? 'bg-green-50/40' : 'bg-red-50/40'}>
                       <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
@@ -674,10 +674,10 @@ export default function ChecklistsPage() {
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-2 border-t border-border/50">
               <Button variant="ghost" onClick={() => setReportEntry(null)}>Fechar</Button>
               <button onClick={exportCsv}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-gray-300 hover:bg-surface-1">
                 <Download className="h-4 w-4" /> Exportar CSV
               </button>
               <button onClick={printReport}

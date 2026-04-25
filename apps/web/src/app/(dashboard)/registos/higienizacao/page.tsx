@@ -125,7 +125,7 @@ const ITENS_ZONA: Record<Zona, { key: string; label: string; period: 'D' | 'S' |
 
 const PERIOD_LABELS = { D: 'Diário', S: 'Semanal', T: 'Trimestral' };
 const PERIOD_COLORS = {
-  D: 'bg-green-100 text-green-700',
+  D: 'bg-green-500/15 text-green-400',
   S: 'bg-blue-100 text-blue-700',
   T: 'bg-purple-100 text-purple-700',
 };
@@ -222,7 +222,7 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Registo de Higienização</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Registo de Higienização</h1>
           <p className="text-sm text-gray-500">Controlo de higienização por zona (R3)</p>
         </div>
         <Button onClick={openModal} className="gap-2">
@@ -234,16 +234,16 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
       <Card>
         <div className="flex flex-wrap gap-3 items-end">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Zona</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Zona</label>
             <select value={zona} onChange={e => setZona(e.target.value as Zona)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
               {ZONAS.map(z => <option key={z.value} value={z.value}>{z.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Mês</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Mês</label>
             <input type="month" value={mes} onChange={e => setMes(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
           </div>
           <div className="flex gap-2 ml-auto">
             <Button variant="secondary" className="gap-2" onClick={() => setShowShare(true)} disabled={!records.length}>
@@ -266,7 +266,7 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
       {/* Tabela */}
       <Card padding="none">
         {isLoading ? (
-          <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-gray-100" />)}</div>
+          <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-surface-3" />)}</div>
         ) : !records.length ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <SprayCan className="mb-3 h-10 w-10 opacity-40" />
@@ -276,7 +276,7 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
         ) : (
           <div className="overflow-x-auto">
             <table className="text-xs w-full">
-              <thead className="border-b border-gray-100 bg-gray-50">
+              <thead className="border-b border-border/50 bg-surface-1">
                 <tr className="text-left">
                   <th className="px-3 py-2 font-medium text-gray-500 whitespace-nowrap">Dia</th>
                   {itensZona.map(item => (
@@ -291,10 +291,10 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
                   <th className="px-3 py-2"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/30">
                 {records.map(r => (
-                  <tr key={r.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
+                  <tr key={r.id} className="hover:bg-surface-1">
+                    <td className="px-3 py-2 font-medium text-gray-300 whitespace-nowrap">
                       {format(new Date(r.dia), 'dd MMM', { locale: pt })}
                     </td>
                     {itensZona.map(item => (
@@ -324,21 +324,21 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Data *</label>
               <input type="date" value={diaModal} onChange={e => setDiaModal(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full rounded-md border border-border bg-surface-2 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
             </div>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Itens higienizados</p>
+            <p className="text-sm font-medium text-gray-300 mb-2">Itens higienizados</p>
             <div className="max-h-64 overflow-y-auto space-y-1 border rounded-md p-3">
               {itensZona.map(item => (
-                <label key={item.key} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 rounded px-2">
+                <label key={item.key} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-surface-1 rounded px-2">
                   <input type="checkbox" checked={itens[item.key] ?? false}
                     onChange={e => setItens(prev => ({ ...prev, [item.key]: e.target.checked }))}
                     className="h-4 w-4 rounded text-blue-600" />
-                  <span className="text-sm text-gray-700 flex-1">{item.label}</span>
+                  <span className="text-sm text-gray-300 flex-1">{item.label}</span>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${PERIOD_COLORS[item.period]}`}>{item.period}</span>
                 </label>
               ))}
@@ -354,10 +354,10 @@ small{font-size:8px}@media print{@page{margin:10mm;size:landscape}}</style></hea
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Observações</label>
             <textarea value={obsModal} onChange={e => setObsModal(e.target.value)} rows={2}
               placeholder="Opcional"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full rounded-md border border-border bg-surface-2 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

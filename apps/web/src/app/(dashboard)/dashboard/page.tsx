@@ -68,7 +68,7 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-7xl">
       <div>
         <h2 className="text-xl font-bold text-gray-100">Visão geral</h2>
-        <p className="mt-0.5 text-sm text-gray-600">Operações em tempo real</p>
+        <p className="mt-0.5 text-sm text-gray-400">Operações em tempo real</p>
       </div>
 
       {/* Stat cards */}
@@ -117,19 +117,19 @@ export default function DashboardPage() {
                 {[1, 2].map(i => <div key={i} className="h-10 animate-pulse rounded-lg bg-surface-3" />)}
               </div>
             ) : !openShortages?.length ? (
-              <p className="px-5 pb-5 pt-3 text-sm text-gray-600">Sem faltas reportadas</p>
+              <p className="px-5 pb-5 pt-3 text-sm text-gray-400">Sem faltas reportadas</p>
             ) : (
               <>
                 <ul className="divide-y divide-border">
                   {openShortages.slice(0, 5).map(r => (
-                    <li key={r.id} className="flex items-start justify-between gap-3 px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                    <li key={r.id} className="flex items-start justify-between gap-3 px-5 py-3 hover:bg-surface-2/[0.02] transition-colors">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-200 truncate">{r.stock?.product?.name ?? '—'}</p>
-                        <p className="text-xs text-gray-600 truncate">
+                        <p className="text-xs text-gray-400 truncate">
                           {r.reporter?.name}{r.quantity ? ` · ${r.quantity} ${r.stock?.product?.unit ?? ''}` : ''}
                         </p>
                       </div>
-                      <span className="shrink-0 text-xs text-gray-600">
+                      <span className="shrink-0 text-xs text-gray-400">
                         {format(new Date(r.createdAt), 'd MMM', { locale: pt })}
                       </span>
                     </li>
@@ -157,15 +157,15 @@ export default function DashboardPage() {
                 {[1, 2, 3].map(i => <div key={i} className="h-10 animate-pulse rounded-lg bg-surface-3" />)}
               </div>
             ) : !recentAnomalies?.length ? (
-              <p className="px-5 pb-5 pt-3 text-sm text-gray-600">Nenhuma anomalia aberta</p>
+              <p className="px-5 pb-5 pt-3 text-sm text-gray-400">Nenhuma anomalia aberta</p>
             ) : (
               <>
                 <ul className="divide-y divide-border">
                   {recentAnomalies.slice(0, 5).map(a => (
-                    <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                    <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-2/[0.02] transition-colors">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-200 truncate">{a.title}</p>
-                        <p className="text-xs text-gray-600">{a.area?.name ?? '—'}</p>
+                        <p className="text-xs text-gray-400">{a.area?.name ?? '—'}</p>
                       </div>
                       <Badge status={a.severity} />
                     </li>
@@ -193,11 +193,11 @@ export default function DashboardPage() {
                 {[1, 2].map(i => <div key={i} className="h-10 animate-pulse rounded-lg bg-surface-3" />)}
               </div>
             ) : stats.pendingOrders === 0 ? (
-              <p className="px-5 pb-5 pt-3 text-sm text-gray-600">Nenhum pedido pendente</p>
+              <p className="px-5 pb-5 pt-3 text-sm text-gray-400">Nenhum pedido pendente</p>
             ) : (
               <div className="px-5 py-6 text-center">
                 <p className="text-4xl font-bold text-orange-400 tabular-nums">{stats.pendingOrders}</p>
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-gray-400">
                   pedido{stats.pendingOrders !== 1 ? 's' : ''} a aguardar aprovação
                 </p>
               </div>

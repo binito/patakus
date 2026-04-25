@@ -49,7 +49,7 @@ export default function AnomaliesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Anomalias</h1>
+        <h1 className="text-2xl font-bold text-gray-100">Anomalias</h1>
         <p className="text-sm text-gray-500">Relatórios de anomalias e não conformidades</p>
       </div>
 
@@ -61,7 +61,7 @@ export default function AnomaliesPage() {
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               statusFilter === opt.value
                 ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                : 'bg-surface-2 text-gray-400 border border-border hover:bg-surface-1'
             }`}
           >
             {opt.label}
@@ -73,7 +73,7 @@ export default function AnomaliesPage() {
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-16 animate-pulse rounded-md bg-gray-100" />
+              <div key={i} className="h-16 animate-pulse rounded-md bg-surface-3" />
             ))}
           </div>
         ) : !anomalies?.length ? (
@@ -84,7 +84,7 @@ export default function AnomaliesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+              <thead className="border-b border-border/50 bg-surface-1">
                 <tr className="text-left text-xs font-medium text-gray-500">
                   <th className="px-6 py-3">Título</th>
                   <th className="px-6 py-3">Área</th>
@@ -95,13 +95,13 @@ export default function AnomaliesPage() {
                   <th className="px-6 py-3">Acção</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/30">
                 {anomalies.map((anomaly) => {
                   const next = nextStatus[anomaly.status];
                   return (
-                    <tr key={anomaly.id} className="hover:bg-gray-50">
+                    <tr key={anomaly.id} className="hover:bg-surface-1">
                       <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900">{anomaly.title}</p>
+                        <p className="font-medium text-gray-100">{anomaly.title}</p>
                         {anomaly.description && (
                           <p className="text-xs text-gray-400 line-clamp-1 max-w-xs">
                             {anomaly.description}

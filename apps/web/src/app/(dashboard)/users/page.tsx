@@ -23,7 +23,7 @@ interface UserForm {
 }
 
 const ROLE_LABELS = { SUPER_ADMIN: 'Super Admin', CLIENT_ADMIN: 'Gestor Cliente', OPERATOR: 'Operacional' };
-const ROLE_COLORS = { SUPER_ADMIN: 'bg-purple-100 text-purple-700', CLIENT_ADMIN: 'bg-blue-100 text-blue-700', OPERATOR: 'bg-green-100 text-green-700' };
+const ROLE_COLORS = { SUPER_ADMIN: 'bg-purple-100 text-purple-700', CLIENT_ADMIN: 'bg-blue-100 text-blue-700', OPERATOR: 'bg-green-500/15 text-green-400' };
 
 export default function UsersPage() {
   const { user: me } = useAuthStore();
@@ -104,7 +104,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Utilizadores</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Utilizadores</h1>
           <p className="text-sm text-gray-500">Gerir logins e permissões</p>
         </div>
         <Button onClick={openNew} className="gap-2">
@@ -114,27 +114,27 @@ export default function UsersPage() {
 
       <Card padding="none">
         {isLoading ? (
-          <div className="space-y-px">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 animate-pulse bg-gray-50" />)}</div>
+          <div className="space-y-px">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 animate-pulse bg-surface-1" />)}</div>
         ) : !users.length ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <UserCircle className="mb-3 h-10 w-10 opacity-40" />
             <p className="text-sm">Nenhum utilizador registado</p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-border/50">
             {users.map(u => (
-              <li key={u.id} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
+              <li key={u.id} className="flex items-center justify-between px-6 py-4 hover:bg-surface-1">
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-3">
                     <UserCircle className="h-6 w-6 text-gray-400" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-gray-900">{u.name}</p>
+                      <p className="font-medium text-gray-100">{u.name}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_COLORS[u.role]}`}>
                         {ROLE_LABELS[u.role]}
                       </span>
-                      {!u.active && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Inativo</span>}
+                      {!u.active && <span className="text-xs px-2 py-0.5 rounded-full bg-surface-3 text-gray-500">Inativo</span>}
                     </div>
                     <p className="text-sm text-gray-500 truncate">
                       {u.email}
@@ -149,7 +149,7 @@ export default function UsersPage() {
                       <ShieldCheck className="h-4 w-4" />
                     </button>
                   )}
-                  <button onClick={() => openEdit(u)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                  <button onClick={() => openEdit(u)} className="rounded p-1.5 text-gray-400 hover:bg-surface-3 hover:text-gray-400">
                     <Pencil className="h-4 w-4" />
                   </button>
                 </div>
@@ -174,15 +174,15 @@ export default function UsersPage() {
               {...register('password', { required: !editing ? 'Password obrigatória' : false, minLength: { value: 6, message: 'Mínimo 6 caracteres' } })}
             />
             <button type="button" onClick={() => setShowPass(p => !p)}
-              className="absolute right-3 top-8 text-gray-400 hover:text-gray-600">
+              className="absolute right-3 top-8 text-gray-400 hover:text-gray-400">
               {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Perfil *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Perfil *</label>
               <select {...register('role', { required: true })}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                className="w-full rounded-md border border-border bg-surface-2 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <option value="OPERATOR">Operacional (Equipa limpeza)</option>
                 <option value="CLIENT_ADMIN">Gestor Cliente</option>
                 {me?.role === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin (Pataku's)</option>}
@@ -192,10 +192,10 @@ export default function UsersPage() {
           </div>
           {(role === 'CLIENT_ADMIN' || role === 'OPERATOR') && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Cliente *</label>
               <select {...register('clientId', { required: 'Selecione um cliente' })}
                 disabled={me?.role === 'CLIENT_ADMIN'}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-600">
+                className="w-full rounded-md border border-border bg-surface-2 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-surface-1 disabled:text-gray-400">
                 <option value="">Selecionar cliente</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>

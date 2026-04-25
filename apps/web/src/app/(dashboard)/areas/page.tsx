@@ -91,7 +91,7 @@ export default function AreasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Áreas</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Áreas</h1>
           <p className="text-sm text-gray-500">{areas.length} área(s) registada(s)</p>
         </div>
         {user?.role !== 'OPERATOR' && (
@@ -103,7 +103,7 @@ export default function AreasPage() {
 
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Card key={i}><div className="h-20 animate-pulse rounded-md bg-gray-100" /></Card>)}
+          {Array.from({ length: 6 }).map((_, i) => <Card key={i}><div className="h-20 animate-pulse rounded-md bg-surface-3" /></Card>)}
         </div>
       ) : !areas.length ? (
         <Card>
@@ -125,18 +125,18 @@ export default function AreasPage() {
                     <MapPin className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900">{area.name}</p>
+                    <p className="font-medium text-gray-100">{area.name}</p>
                     {area.floor && <p className="text-xs text-gray-400">Piso {area.floor}</p>}
                     {area.description && <p className="text-sm text-gray-500 line-clamp-2 mt-0.5">{area.description}</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 ml-2 shrink-0">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${area.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${area.active ? 'bg-green-500/15 text-green-400' : 'bg-surface-3 text-gray-500'}`}>
                     {area.active ? 'Ativa' : 'Inativa'}
                   </span>
                   {user?.role !== 'OPERATOR' && (
                     <>
-                      <button onClick={() => openEdit(area)} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 ml-1">
+                      <button onClick={() => openEdit(area)} className="rounded p-1 text-gray-400 hover:bg-surface-3 hover:text-gray-400 ml-1">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
@@ -166,9 +166,9 @@ export default function AreasPage() {
           <Input label="Descrição" placeholder="Descrição opcional da área" {...register('description')} />
           {user?.role === 'SUPER_ADMIN' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Cliente *</label>
               <select {...register('clientId', { required: 'Selecione um cliente' })}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                className="w-full rounded-md border border-border bg-surface-2 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <option value="">Selecionar cliente</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>

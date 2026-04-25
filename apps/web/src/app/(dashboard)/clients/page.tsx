@@ -79,7 +79,7 @@ export default function ClientsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Clientes</h1>
           <p className="text-sm text-gray-500">{clients.length} cliente(s) registado(s)</p>
         </div>
         <Button onClick={openNew} className="gap-2">
@@ -90,7 +90,7 @@ export default function ClientsPage() {
       <Card padding="none">
         {isLoading ? (
           <div className="space-y-px">
-            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 animate-pulse bg-gray-50" />)}
+            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 animate-pulse bg-surface-1" />)}
           </div>
         ) : !clients.length ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
@@ -99,25 +99,25 @@ export default function ClientsPage() {
             <Button variant="secondary" size="sm" className="mt-4" onClick={openNew}>Adicionar primeiro cliente</Button>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-border/50">
             {clients.map(client => (
-              <li key={client.id} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
+              <li key={client.id} className="flex items-center justify-between px-6 py-4 hover:bg-surface-1">
                 <Link href={`/clients/${client.id}`} className="flex flex-1 items-center gap-4 min-w-0">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100">
                     <Building2 className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900">{client.name}</p>
+                    <p className="font-medium text-gray-100">{client.name}</p>
                     <p className="text-sm text-gray-500 truncate">
                       {[client.sector, client.nif && `NIF ${client.nif}`, client.phone].filter(Boolean).join(' · ')}
                     </p>
                   </div>
                 </Link>
                 <div className="flex items-center gap-2 ml-4">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${client.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${client.active ? 'bg-green-500/15 text-green-400' : 'bg-surface-3 text-gray-500'}`}>
                     {client.active ? 'Ativo' : 'Inativo'}
                   </span>
-                  <button onClick={(e) => { e.preventDefault(); openEdit(client); }} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                  <button onClick={(e) => { e.preventDefault(); openEdit(client); }} className="rounded p-1.5 text-gray-400 hover:bg-surface-3 hover:text-gray-400">
                     <Pencil className="h-4 w-4" />
                   </button>
                   <ChevronRight className="h-4 w-4 text-gray-300" />
@@ -139,9 +139,9 @@ export default function ClientsPage() {
           <Input label="Email" type="email" placeholder="geral@empresa.pt" {...register('email')} />
           <Input label="Morada" placeholder="Rua, Localidade" {...register('address')} />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Setor</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Setor</label>
             <select {...register('sector')}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="w-full rounded-md border border-border bg-surface-2 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
               <option value="">Selecionar setor</option>
               {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>

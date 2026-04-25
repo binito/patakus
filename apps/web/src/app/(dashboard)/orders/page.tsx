@@ -23,7 +23,7 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Pedidos</h1>
+        <h1 className="text-2xl font-bold text-gray-100">Pedidos</h1>
         <p className="text-sm text-gray-500">Histórico de pedidos e sugestões de reposição</p>
       </div>
 
@@ -40,8 +40,8 @@ export default function OrdersPage() {
           </p>
           <ul className="space-y-2">
             {suggestions.map((c) => (
-              <li key={c.id} className="flex items-center justify-between rounded-md bg-white px-4 py-2 text-sm shadow-sm">
-                <span className="font-medium text-gray-900">{c.product?.name ?? c.productId}</span>
+              <li key={c.id} className="flex items-center justify-between rounded-md bg-surface-2 px-4 py-2 text-sm shadow-sm">
+                <span className="font-medium text-gray-100">{c.product?.name ?? c.productId}</span>
                 <span className="text-gray-500">
                   {c.quantity} / {c.minQuantity} {c.product?.unit ?? "un"}
                 </span>
@@ -52,8 +52,8 @@ export default function OrdersPage() {
       )}
 
       <Card padding="none">
-        <div className="border-b border-gray-100 px-6 py-4">
-          <h2 className="flex items-center gap-2 font-semibold text-gray-900">
+        <div className="border-b border-border/50 px-6 py-4">
+          <h2 className="flex items-center gap-2 font-semibold text-gray-100">
             <ShoppingCart className="h-4 w-4 text-blue-600" />
             Lista de Pedidos
           </h2>
@@ -62,7 +62,7 @@ export default function OrdersPage() {
         {ordersLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-14 animate-pulse rounded-md bg-gray-100" />
+              <div key={i} className="h-14 animate-pulse rounded-md bg-surface-3" />
             ))}
           </div>
         ) : !orders?.length ? (
@@ -73,7 +73,7 @@ export default function OrdersPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+              <thead className="border-b border-border/50 bg-surface-1">
                 <tr className="text-left text-xs font-medium text-gray-500">
                   <th className="px-6 py-3">Consumível</th>
                   <th className="px-6 py-3">Quantidade</th>
@@ -83,10 +83,10 @@ export default function OrdersPage() {
                   <th className="px-6 py-3">Observações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/30">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium text-gray-900">{order.items?.[0]?.product?.name ?? "—"}</td>
+                  <tr key={order.id} className="hover:bg-surface-1">
+                    <td className="px-6 py-4 font-medium text-gray-100">{order.items?.[0]?.product?.name ?? "—"}</td>
                     <td className="px-6 py-4 text-gray-500">
                       {order.items?.[0]?.quantity ?? "-"} {order.items?.[0]?.product?.unit ?? ""}
                     </td>

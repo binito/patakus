@@ -194,7 +194,7 @@ export default function EntradasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Registo de Entradas</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Registo de Entradas</h1>
           <p className="text-sm text-gray-500">Controlo dos produtos à receção (R1)</p>
         </div>
         <Button onClick={() => setModalOpen(true)} className="gap-2">
@@ -206,9 +206,9 @@ export default function EntradasPage() {
       <Card>
         <div className="flex flex-wrap gap-3 items-end">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Período</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Período</label>
             <select value={timeRange} onChange={e => setTimeRange(e.target.value as TimeRange)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
               <option value="week">Última semana</option>
               <option value="month">Último mês</option>
               <option value="3months">Últimos 3 meses</option>
@@ -218,14 +218,14 @@ export default function EntradasPage() {
           {timeRange === 'custom' && (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">De</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">De</label>
                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Até</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Até</label>
                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
             </>
           )}
@@ -247,7 +247,7 @@ export default function EntradasPage() {
       {records.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
           <Card>
-            <p className="text-2xl font-bold text-gray-900">{records.length}</p>
+            <p className="text-2xl font-bold text-gray-100">{records.length}</p>
             <p className="text-xs text-gray-500">Entradas no período</p>
           </Card>
           <Card>
@@ -260,7 +260,7 @@ export default function EntradasPage() {
       {/* Tabela */}
       <Card padding="none">
         {isLoading ? (
-          <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-gray-100" />)}</div>
+          <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-surface-3" />)}</div>
         ) : !records.length ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <PackageCheck className="mb-3 h-10 w-10 opacity-40" />
@@ -270,7 +270,7 @@ export default function EntradasPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+              <thead className="border-b border-border/50 bg-surface-1">
                 <tr className="text-left text-xs font-medium text-gray-500">
                   <th className="px-4 py-3">Data</th>
                   <th className="px-4 py-3">Matéria Prima</th>
@@ -285,19 +285,19 @@ export default function EntradasPage() {
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/30">
                 {records.map(r => {
                   const allOk = r.veiculoOk && r.embalagemOk && r.rotulagemOk && r.produtoOk;
                   return (
-                    <tr key={r.id} className={allOk ? 'hover:bg-gray-50' : 'bg-red-50 hover:bg-red-100'}>
-                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{format(new Date(r.data), 'dd/MM/yyyy')}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{r.materiaPrima}</td>
-                      <td className="px-4 py-3 text-gray-600">{r.fornecedor}{r.faturaN ? <span className="text-gray-400 text-xs ml-1">/ {r.faturaN}</span> : ''}</td>
+                    <tr key={r.id} className={allOk ? 'hover:bg-surface-1' : 'bg-red-50 hover:bg-red-100'}>
+                      <td className="px-4 py-3 text-gray-300 whitespace-nowrap">{format(new Date(r.data), 'dd/MM/yyyy')}</td>
+                      <td className="px-4 py-3 font-medium text-gray-100">{r.materiaPrima}</td>
+                      <td className="px-4 py-3 text-gray-400">{r.fornecedor}{r.faturaN ? <span className="text-gray-400 text-xs ml-1">/ {r.faturaN}</span> : ''}</td>
                       <td className="px-4 py-3 text-center"><Tick ok={r.veiculoOk} /></td>
                       <td className="px-4 py-3 text-center"><Tick ok={r.embalagemOk} /></td>
                       <td className="px-4 py-3 text-center"><Tick ok={r.rotulagemOk} /></td>
                       <td className="px-4 py-3 text-center"><Tick ok={r.produtoOk} /></td>
-                      <td className="px-4 py-3 text-gray-600">{r.temperatura !== undefined && r.temperatura !== null ? `${r.temperatura}°C` : '—'}</td>
+                      <td className="px-4 py-3 text-gray-400">{r.temperatura !== undefined && r.temperatura !== null ? `${r.temperatura}°C` : '—'}</td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{r.lote ?? '—'}</td>
                       <td className="px-4 py-3 text-gray-500">{r.operator.name}</td>
                       <td className="px-4 py-3">
@@ -332,7 +332,7 @@ export default function EntradasPage() {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Nível de Higiene e Segurança</p>
+            <p className="text-sm font-medium text-gray-300 mb-2">Nível de Higiene e Segurança</p>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { key: 'veiculoOk', label: 'Veículo' },
@@ -340,9 +340,9 @@ export default function EntradasPage() {
                 { key: 'rotulagemOk', label: 'Rotulagem' },
                 { key: 'produtoOk', label: 'Produto' },
               ].map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 cursor-pointer hover:bg-gray-50">
+                <label key={key} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 cursor-pointer hover:bg-surface-1">
                   <input type="checkbox" {...register(key as any)} className="h-4 w-4 rounded text-blue-600" />
-                  <span className="text-sm text-gray-700">{label} Conforme</span>
+                  <span className="text-sm text-gray-300">{label} Conforme</span>
                 </label>
               ))}
             </div>

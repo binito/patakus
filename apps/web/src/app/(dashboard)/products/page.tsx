@@ -60,7 +60,7 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Produtos</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Produtos</h1>
           <p className="text-sm text-gray-500">Catálogo de produtos do sistema</p>
         </div>
         <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export default function ProductsPage() {
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-14 animate-pulse rounded-md bg-gray-100" />
+              <div key={i} className="h-14 animate-pulse rounded-md bg-surface-3" />
             ))}
           </div>
         ) : !products?.length ? (
@@ -106,7 +106,7 @@ export default function ProductsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+              <thead className="border-b border-border/50 bg-surface-1">
                 <tr className="text-left text-xs font-medium text-gray-500">
                   <th className="px-6 py-3">Nome</th>
                   <th className="px-6 py-3">Categoria</th>
@@ -115,16 +115,16 @@ export default function ProductsPage() {
                   <th className="px-6 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/30">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product.id} className="hover:bg-surface-1">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-3">
                           <Box className="h-4 w-4 text-gray-500" />
                         </div>
                         <div>
-                          <span className="font-medium text-gray-900">{product.name}</span>
+                          <span className="font-medium text-gray-100">{product.name}</span>
                           {product.sku && <p className="text-xs text-gray-400">{product.sku}</p>}
                         </div>
                       </div>
