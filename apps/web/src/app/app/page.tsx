@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ClipboardList, AlertTriangle, Package, ChevronRight } from 'lucide-react';
+import { ClipboardList, AlertTriangle, Package, ChevronRight, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/lib/api';
 
@@ -26,59 +26,64 @@ export default function AppHomePage() {
     return 'Boa noite';
   };
 
+  const dateStr = new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
+
   return (
-    <div className="p-4 space-y-4">
-      <div className="rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm p-4">
-        <p className="text-white/50 text-sm">{greeting()},</p>
-        <p className="text-xl font-bold text-white">{user?.name?.split(' ')[0]}</p>
-        <p className="text-xs text-white/30 mt-1">{new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+    <div className="p-4 space-y-5">
+      {/* Greeting */}
+      <div className="pt-2">
+        <p className="text-xs text-gray-600 uppercase tracking-widest">{greeting()}</p>
+        <p className="mt-0.5 text-2xl font-bold text-gray-100">{user?.name?.split(' ')[0]}</p>
+        <p className="mt-0.5 text-xs text-gray-600 capitalize">{dateStr}</p>
       </div>
 
-      <h2 className="text-xs font-semibold text-white/40 uppercase tracking-widest px-1">Acesso rápido</h2>
+      {/* Quick access */}
+      <div>
+        <p className="mb-2 text-xs font-medium text-gray-600 uppercase tracking-widest">Acesso rápido</p>
+        <div className="space-y-2">
+          <Link href="/app/checklists"
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-4 transition-colors active:bg-surface-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-500/10">
+              <ClipboardList size={18} className="text-primary-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-200">Checklists</p>
+              <p className="text-xs text-gray-600">{pendingChecklists?.length ?? '—'} templates disponíveis</p>
+            </div>
+            <ChevronRight size={14} className="text-gray-700 shrink-0" />
+          </Link>
 
-      <div className="space-y-3">
-        <Link href="/app/checklists" className="flex items-center rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm p-4 gap-4 active:bg-white/5 transition-colors">
-          <div className="w-10 h-10 rounded-lg bg-primary-400/20 flex items-center justify-center">
-            <ClipboardList size={20} className="text-primary-300" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium text-white">Checklists</p>
-            <p className="text-xs text-white/40">
-              {pendingChecklists?.length ?? '—'} templates disponíveis
-            </p>
-          </div>
-          <ChevronRight size={16} className="text-white/20" />
-        </Link>
+          <Link href="/app/anomalias"
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-4 transition-colors active:bg-surface-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-500/10">
+              <AlertTriangle size={18} className="text-red-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-200">Anomalias</p>
+              <p className="text-xs text-gray-600">{openAnomalies?.length ?? '—'} em aberto</p>
+            </div>
+            <ChevronRight size={14} className="text-gray-700 shrink-0" />
+          </Link>
 
-        <Link href="/app/anomalias" className="flex items-center rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm p-4 gap-4 active:bg-white/5 transition-colors">
-          <div className="w-10 h-10 rounded-lg bg-rose-400/20 flex items-center justify-center">
-            <AlertTriangle size={20} className="text-rose-300" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium text-white">Anomalias</p>
-            <p className="text-xs text-white/40">
-              {openAnomalies?.length ?? '—'} em aberto
-            </p>
-          </div>
-          <ChevronRight size={16} className="text-white/20" />
-        </Link>
-
-        <Link href="/app/consumiveis" className="flex items-center rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm p-4 gap-4 active:bg-white/5 transition-colors">
-          <div className="w-10 h-10 rounded-lg bg-emerald-400/20 flex items-center justify-center">
-            <Package size={20} className="text-emerald-300" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium text-white">Consumíveis</p>
-            <p className="text-xs text-white/40">Registar consumo</p>
-          </div>
-          <ChevronRight size={16} className="text-white/20" />
-        </Link>
+          <Link href="/app/consumiveis"
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-4 transition-colors active:bg-surface-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/10">
+              <Package size={18} className="text-green-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-200">Consumíveis</p>
+              <p className="text-xs text-gray-600">Registar consumo</p>
+            </div>
+            <ChevronRight size={14} className="text-gray-700 shrink-0" />
+          </Link>
+        </div>
       </div>
 
       <button
         onClick={logout}
-        className="w-full text-center text-sm text-white/30 py-4 active:text-white/60"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm text-gray-600 transition-colors active:bg-surface-2"
       >
+        <LogOut size={14} />
         Sair da conta
       </button>
     </div>

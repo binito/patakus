@@ -5,21 +5,12 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: 'none' | 'sm' | 'md' | 'lg';
 }
 
-const paddingClasses = {
-  none: '',
-  sm: 'p-3',
-  md: 'p-5',
-  lg: 'p-6',
-};
+const paddingClasses = { none: '', sm: 'p-3', md: 'p-5', lg: 'p-6' };
 
 export function Card({ padding = 'md', className, children, ...props }: CardProps) {
   return (
     <div
-      className={clsx(
-        'rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm shadow-lg',
-        paddingClasses[padding],
-        className
-      )}
+      className={clsx('rounded-xl border border-border bg-surface-2', paddingClasses[padding], className)}
       {...props}
     >
       {children}
@@ -37,7 +28,7 @@ export function CardHeader({ className, children, ...props }: HTMLAttributes<HTM
 
 export function CardTitle({ className, children, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={clsx('text-base font-semibold text-white', className)} {...props}>
+    <h3 className={clsx('text-sm font-semibold text-gray-100', className)} {...props}>
       {children}
     </h3>
   );

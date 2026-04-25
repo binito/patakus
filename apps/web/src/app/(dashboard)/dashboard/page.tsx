@@ -5,41 +5,36 @@ import { AlertTriangle, MapPin, ShoppingCart, ClipboardList, Package } from 'luc
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
-import { Anomaly, Order } from '@/types';
+import { Anomaly } from '@/types';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
+import { clsx } from 'clsx';
 
 interface DashboardStats {
-  totalClients: number;
-  totalAreas: number;
-  openAnomalies: number;
-  pendingOrders: number;
-  openShortageReports: number;
-  checklistsThisMonth: number;
+  totalClients: number; totalAreas: number; openAnomalies: number;
+  pendingOrders: number; openShortageReports: number; checklistsThisMonth: number;
 }
 
 interface ShortageReport {
-  id: string; quantity?: number; notes?: string;
-  status: string; createdAt: string;
+  id: string; quantity?: number; notes?: string; status: string; createdAt: string;
   stock?: { product?: { name: string; unit: string }; clientId: string };
   reporter?: { name: string };
 }
 
-function StatCard({ label, value, icon: Icon, color, href }: {
-  label: string; value: number | string;
-  icon: React.ElementType; color: string; href?: string;
+function StatCard({ label, value, icon: Icon, iconClass, href }: {
+  label: string; value: number | string; icon: React.ElementType; iconClass: string; href?: string;
 }) {
   const inner = (
-    <Card className={href ? 'hover:shadow-md transition-shadow cursor-pointer' : ''}>
-      <div className="flex items-center gap-4">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${color}`}>
-          <Icon className="h-6 w-6" />
-        </div>
+    <Card className={clsx('group', href && 'hover:border-border/80 transition-colors cursor-pointer')}>
+      <div className="flex items-start justify-between">
         <div>
-          <p className="text-2xl font-bold text-white">{value}</p>
-          <p className="text-sm text-white/60">{label}</p>
+          <p className="text-2xl font-bold text-gray-100 tabular-nums">{value}</p>
+          <p className="mt-1 text-xs text-gray-500">{label}</p>
+        </div>
+        <div className={clsx('flex h-9 w-9 items-center justify-center rounded-lg', iconClass)}>
+          <Icon className="h-4 w-4" />
         </div>
       </div>
     </Card>
@@ -54,7 +49,7 @@ export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
     queryFn: () => api.get('/dashboard/stats').then(r => r.data),
-    refetchInterval: 60_000, // actualiza a cada minuto
+    refetchInterval: 60_000,
   });
 
   const { data: recentAnomalies, isLoading: anomaliesLoading } = useQuery<Anomaly[]>({
@@ -68,142 +63,146 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl">
       <div>
-        <h1 className="text-2xl font-bold text-white">Painel</h1>
-        <p className="text-sm text-white/60">Visão geral das operações</p>
+        <h2 className="text-xl font-bold text-gray-100">Visão geral</h2>
+        <p className="mt-0.5 text-sm text-gray-600">Operações em tempo real</p>
       </div>
 
       {/* Stat cards */}
       {statsLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {Array.from({ length: isSuperAdmin ? 6 : 5 }).map((_, i) => (
-            <Card key={i}><div className="h-16 animate-pulse rounded-md bg-white/10" /></Card>
+            <Card key={i}><div className="h-14 animate-pulse rounded-lg bg-surface-3" /></Card>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {isSuperAdmin && (
-            <StatCard label="Clientes activos" value={stats?.totalClients ?? 0}
-              icon={MapPin} color="bg-primary-400/20 text-primary-300" />
+            <StatCard label="Clientes" value={stats?.totalClients ?? 0}
+              icon={MapPin} iconClass="bg-primary-500/10 text-primary-400" />
           )}
           <StatCard label="Áreas" value={stats?.totalAreas ?? 0}
-            icon={MapPin} color="bg-cyan-400/20 text-cyan-300" />
-          <StatCard label="Anomalias abertas" value={stats?.openAnomalies ?? 0}
-            icon={AlertTriangle} color="bg-rose-400/20 text-rose-300" href="/anomalies" />
-          <StatCard label="Pedidos pendentes" value={stats?.pendingOrders ?? 0}
-            icon={ShoppingCart} color="bg-orange-400/20 text-orange-300" href="/orders" />
-          <StatCard label="Faltas reportadas" value={stats?.openShortageReports ?? 0}
-            icon={Package} color={stats?.openShortageReports ? 'bg-rose-400/20 text-rose-300' : 'bg-emerald-400/20 text-emerald-300'}
+            icon={MapPin} iconClass="bg-blue-500/10 text-blue-400" />
+          <StatCard label="Anomalias" value={stats?.openAnomalies ?? 0}
+            icon={AlertTriangle} iconClass="bg-red-500/10 text-red-400" href="/anomalies" />
+          <StatCard label="Pedidos" value={stats?.pendingOrders ?? 0}
+            icon={ShoppingCart} iconClass="bg-orange-500/10 text-orange-400" href="/orders" />
+          <StatCard label="Faltas" value={stats?.openShortageReports ?? 0}
+            icon={Package} iconClass={stats?.openShortageReports ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}
             href="/consumables" />
-          <StatCard label="Checklists este mês" value={stats?.checklistsThisMonth ?? 0}
-            icon={ClipboardList} color="bg-emerald-400/20 text-emerald-300" href="/checklists" />
+          <StatCard label="Checklists/mês" value={stats?.checklistsThisMonth ?? 0}
+            icon={ClipboardList} iconClass="bg-green-500/10 text-green-400" href="/checklists" />
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Faltas de consumíveis */}
-        <Card>
-          <CardHeader>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Faltas */}
+        <Card padding="none">
+          <CardHeader className="px-5 pt-5 pb-0 mb-0">
             <CardTitle>Faltas de consumíveis</CardTitle>
             {(openShortages?.length ?? 0) > 0 && (
-              <span className="rounded-full bg-rose-400/20 px-2 py-0.5 text-xs font-semibold text-rose-300 ring-1 ring-rose-400/30">
-                {openShortages!.length} em aberto
+              <span className="rounded-md bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-400 ring-1 ring-red-500/25">
+                {openShortages!.length}
               </span>
             )}
           </CardHeader>
-          {shortagesLoading ? (
-            <div className="space-y-3">
-              {[1, 2].map(i => <div key={i} className="h-12 animate-pulse rounded-md bg-white/10" />)}
-            </div>
-          ) : !openShortages?.length ? (
-            <p className="py-6 text-center text-sm text-white/40">Sem faltas reportadas</p>
-          ) : (
-            <ul className="divide-y divide-white/10">
-              {openShortages.slice(0, 5).map(r => (
-                <li key={r.id} className="py-3 flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
-                      {r.stock?.product?.name ?? '—'}
-                    </p>
-                    <p className="text-xs text-white/50">
-                      {r.reporter?.name}
-                      {r.quantity ? ` · ${r.quantity} ${r.stock?.product?.unit ?? ''}` : ''}
-                      {r.notes ? ` · "${r.notes}"` : ''}
-                    </p>
-                  </div>
-                  <span className="text-xs text-white/40 shrink-0">
-                    {format(new Date(r.createdAt), "d MMM HH:mm", { locale: pt })}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {(openShortages?.length ?? 0) > 0 && (
-            <div className="mt-3 border-t border-white/10 pt-3">
-              <Link href="/consumables" className="text-xs font-medium text-primary-400 hover:text-primary-300">
-                Ver todas as faltas →
-              </Link>
-            </div>
-          )}
+          <div className="mt-3">
+            {shortagesLoading ? (
+              <div className="space-y-2 px-5 pb-5">
+                {[1, 2].map(i => <div key={i} className="h-10 animate-pulse rounded-lg bg-surface-3" />)}
+              </div>
+            ) : !openShortages?.length ? (
+              <p className="px-5 pb-5 pt-3 text-sm text-gray-600">Sem faltas reportadas</p>
+            ) : (
+              <>
+                <ul className="divide-y divide-border">
+                  {openShortages.slice(0, 5).map(r => (
+                    <li key={r.id} className="flex items-start justify-between gap-3 px-5 py-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-200 truncate">{r.stock?.product?.name ?? '—'}</p>
+                        <p className="text-xs text-gray-600 truncate">
+                          {r.reporter?.name}{r.quantity ? ` · ${r.quantity} ${r.stock?.product?.unit ?? ''}` : ''}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs text-gray-600">
+                        {format(new Date(r.createdAt), 'd MMM', { locale: pt })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="border-t border-border px-5 py-3">
+                  <Link href="/consumables" className="text-xs font-medium text-primary-400 hover:text-primary-300 transition-colors">
+                    Ver todas →
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
         </Card>
 
-        {/* Anomalias recentes */}
-        <Card>
-          <CardHeader>
+        {/* Anomalias */}
+        <Card padding="none">
+          <CardHeader className="px-5 pt-5 pb-0 mb-0">
             <CardTitle>Anomalias abertas</CardTitle>
             <Badge status="OPEN" />
           </CardHeader>
-          {anomaliesLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => <div key={i} className="h-12 animate-pulse rounded-md bg-white/10" />)}
-            </div>
-          ) : !recentAnomalies?.length ? (
-            <p className="py-6 text-center text-sm text-white/40">Nenhuma anomalia aberta</p>
-          ) : (
-            <ul className="divide-y divide-white/10">
-              {recentAnomalies.slice(0, 5).map(anomaly => (
-                <li key={anomaly.id} className="flex items-center justify-between py-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{anomaly.title}</p>
-                    <p className="text-xs text-white/50">{anomaly.area?.name ?? '—'}</p>
-                  </div>
-                  <Badge status={anomaly.severity} />
-                </li>
-              ))}
-            </ul>
-          )}
-          {(recentAnomalies?.length ?? 0) > 0 && (
-            <div className="mt-3 border-t border-white/10 pt-3">
-              <Link href="/anomalies" className="text-xs font-medium text-primary-400 hover:text-primary-300">
-                Ver todas →
-              </Link>
-            </div>
-          )}
+          <div className="mt-3">
+            {anomaliesLoading ? (
+              <div className="space-y-2 px-5 pb-5">
+                {[1, 2, 3].map(i => <div key={i} className="h-10 animate-pulse rounded-lg bg-surface-3" />)}
+              </div>
+            ) : !recentAnomalies?.length ? (
+              <p className="px-5 pb-5 pt-3 text-sm text-gray-600">Nenhuma anomalia aberta</p>
+            ) : (
+              <>
+                <ul className="divide-y divide-border">
+                  {recentAnomalies.slice(0, 5).map(a => (
+                    <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-200 truncate">{a.title}</p>
+                        <p className="text-xs text-gray-600">{a.area?.name ?? '—'}</p>
+                      </div>
+                      <Badge status={a.severity} />
+                    </li>
+                  ))}
+                </ul>
+                <div className="border-t border-border px-5 py-3">
+                  <Link href="/anomalies" className="text-xs font-medium text-primary-400 hover:text-primary-300 transition-colors">
+                    Ver todas →
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
         </Card>
 
-        {/* Pedidos pendentes */}
-        <Card>
-          <CardHeader>
+        {/* Pedidos */}
+        <Card padding="none">
+          <CardHeader className="px-5 pt-5 pb-0 mb-0">
             <CardTitle>Pedidos pendentes</CardTitle>
             <Badge status="PENDING" />
           </CardHeader>
-          {!stats ? (
-            <div className="space-y-3">
-              {[1, 2].map(i => <div key={i} className="h-12 animate-pulse rounded-md bg-white/10" />)}
+          <div className="mt-3">
+            {!stats ? (
+              <div className="space-y-2 px-5 pb-5">
+                {[1, 2].map(i => <div key={i} className="h-10 animate-pulse rounded-lg bg-surface-3" />)}
+              </div>
+            ) : stats.pendingOrders === 0 ? (
+              <p className="px-5 pb-5 pt-3 text-sm text-gray-600">Nenhum pedido pendente</p>
+            ) : (
+              <div className="px-5 py-6 text-center">
+                <p className="text-4xl font-bold text-orange-400 tabular-nums">{stats.pendingOrders}</p>
+                <p className="mt-1 text-sm text-gray-600">
+                  pedido{stats.pendingOrders !== 1 ? 's' : ''} a aguardar aprovação
+                </p>
+              </div>
+            )}
+            <div className="border-t border-border px-5 py-3">
+              <Link href="/orders" className="text-xs font-medium text-primary-400 hover:text-primary-300 transition-colors">
+                Ver encomendas →
+              </Link>
             </div>
-          ) : stats.pendingOrders === 0 ? (
-            <p className="py-6 text-center text-sm text-white/40">Nenhum pedido pendente</p>
-          ) : (
-            <div className="py-6 text-center">
-              <p className="text-3xl font-bold text-orange-300">{stats.pendingOrders}</p>
-              <p className="text-sm text-white/50 mt-1">pedido{stats.pendingOrders !== 1 ? 's' : ''} a aguardar</p>
-            </div>
-          )}
-          <div className="mt-3 border-t border-white/10 pt-3">
-            <Link href="/orders" className="text-xs font-medium text-primary-400 hover:text-primary-300">
-              Ver encomendas →
-            </Link>
           </div>
         </Card>
       </div>

@@ -8,19 +8,33 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#e8b96a',
-          50:  '#fdf8ed',
-          100: '#f9edcc',
-          200: '#f2d88a',
-          300: '#ecc250',
-          400: '#e8b96a',
-          500: '#d4943a',
-          600: '#b8732a',
-          700: '#96551e',
-          800: '#744018',
-          900: '#5a3012',
+        surface: {
+          0: '#0f0f11',
+          1: '#141417',
+          2: '#1c1c1f',
+          3: '#242428',
         },
+        border: {
+          DEFAULT: '#2a2a2e',
+          subtle: '#222226',
+        },
+        primary: {
+          DEFAULT: '#6366f1',
+          50:  '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
       },
     },
   },

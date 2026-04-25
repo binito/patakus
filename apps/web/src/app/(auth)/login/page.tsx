@@ -22,47 +22,46 @@ type FormValues = z.infer<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, hydrated } = useAuthStore();
-
   const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
 
   useEffect(() => {
-    if (hydrated && isAuthenticated) {
-      router.replace(isMobile() ? '/app' : '/dashboard');
-    }
+    if (hydrated && isAuthenticated) router.replace(isMobile() ? '/app' : '/dashboard');
   }, [hydrated, isAuthenticated, router]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
 
   const onSubmit = async (data: FormValues) => {
     try {
       const res = await api.post<{ user: import('@/types').User }>('/auth/login', data);
       login(res.data.user);
-      toast.success('Login realizado com sucesso!');
+      toast.success('Bem-vindo!');
       router.replace(isMobile() ? '/app' : '/dashboard');
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'E-mail ou senha inválidos';
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Credenciais inválidas';
       toast.error(message);
     }
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
       <ShaderBackground />
 
-      <div className="relative z-10 w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-white drop-shadow">Patakus</h1>
-          <p className="mt-2 text-white/70">Faça login para continuar</p>
-        </div>
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-sm px-4">
+        <div className="rounded-2xl border border-white/10 bg-black/50 p-8 shadow-2xl backdrop-blur-xl">
+          {/* Brand */}
+          <div className="mb-8">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-primary-400" />
+              <span className="text-xs font-medium text-primary-400 tracking-widest uppercase">Patakus</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white">Entrar na conta</h1>
+            <p className="mt-1 text-sm text-white/50">Gestão HACCP</p>
+          </div>
 
-        <div className="rounded-xl border border-white/20 bg-white/10 p-8 shadow-2xl backdrop-blur-md">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="E-mail"
               type="email"
@@ -79,15 +78,11 @@ export default function LoginPage() {
               error={errors.password?.message}
               {...register('password')}
             />
-
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              loading={isSubmitting}
-            >
-              Entrar
-            </Button>
+            <div className="pt-1">
+              <Button type="submit" className="w-full" size="lg" loading={isSubmitting}>
+                Entrar
+              </Button>
+            </div>
           </form>
         </div>
       </div>
