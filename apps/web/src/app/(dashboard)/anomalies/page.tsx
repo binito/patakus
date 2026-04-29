@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
@@ -44,6 +44,15 @@ export default function AnomaliesPage() {
       toast.success('Estado actualizado');
     },
     onError: () => toast.error('Erro ao actualizar estado'),
+  });
+
+  const { mutate: deleteAnomaly } = useMutation({
+    mutationFn: (id: string) => api.delete(`/reports/anomalies/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['anomalies'] });
+      toast.success('Anomalia eliminada');
+    },
+    onError: () => toast.error('Erro ao eliminar anomalia'),
   });
 
   return (
@@ -120,16 +129,30 @@ export default function AnomaliesPage() {
                       </td>
                       <td className="px-6 py-4 text-gray-500">{anomaly.reporter?.name ?? anomaly.reporterId}</td>
                       <td className="px-6 py-4">
-                        {next ? (
-                          <button
-                            onClick={() => updateStatus({ id: anomaly.id, status: next.status })}
-                            className="text-xs font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap"
-                          >
-                            {next.label}
-                          </button>
-                        ) : (
-                          <span className="text-xs text-gray-400">—</span>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {next ? (
+                            <button
+                              onClick={() => updateStatus({ id: anomaly.id, status: next.status })}
+                              className="text-xs font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap"
+                            >
+                              {next.label}
+                            </button>
+                          ) : null}
+                          {anomaly.status === 'RESOLVED' && (
+                            <button
+                              onClick={() => {
+                                if (confirm('Apagar esta anomalia resolvida?')) {
+                                  deleteAnomaly(anomaly.id);
+                                }
+                              }}
+                              className="text-red-400 hover:text-red-600 transition-colors"
+                              title="Apagar anomalia"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                          {!next && anomaly.status !== 'RESOLVED' && <span className="text-xs text-gray-400">—</span>}
+                        </div>
                       </td>
                     </tr>
                   );

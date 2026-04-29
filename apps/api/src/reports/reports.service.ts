@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { AnomalyStatus, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../common/types/auth-user.type';
@@ -59,6 +59,16 @@ export class ReportsService {
     if (!report) throw new NotFoundException('Relatório não encontrado');
     assertOwnership(actor, report.area.clientId);
     return report;
+  }
+
+  async deleteAnomaly(id: string, actor: AuthUser) {
+    const report = await this.findOne(id, actor);
+    if (report.status !== AnomalyStatus.RESOLVED) {
+      throw new BadRequestException('Só é possível apagar anomalias resolvidas');
+    }
+    await this.prisma.anomalyPhoto.deleteMany({ where: { reportId: id } });
+    await this.prisma.anomalyReport.delete({ where: { id } });
+    return { id };
   }
 
   async updateStatus(id: string, status: AnomalyStatus, resolvedNote: string | undefined, actor: AuthUser) {

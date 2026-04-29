@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -80,6 +81,11 @@ export class ReportsController {
   @Get('anomalies/:id')
   findOne(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.reportsService.findOne(id, user);
+  }
+
+  @Delete('anomalies/:id')
+  deleteAnomaly(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.reportsService.deleteAnomaly(id, user);
   }
 
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)

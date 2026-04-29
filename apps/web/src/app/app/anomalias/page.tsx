@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Camera, X, AlertTriangle, Send, List, Plus } from 'lucide-react';
+import { Camera, X, AlertTriangle, Send, List, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { Area, Anomaly, AnomalyStatus } from '@/types';
@@ -43,6 +43,15 @@ export default function AnomaliaPage() {
   const { data: anomalies, isLoading } = useQuery<Anomaly[]>({
     queryKey: ['app-anomalies'],
     queryFn: () => api.get('/reports/anomalies').then(r => r.data),
+  });
+
+  const { mutate: deleteAnomaly } = useMutation({
+    mutationFn: (id: string) => api.delete(`/reports/anomalies/${id}`),
+    onSuccess: () => {
+      toast.success('Anomalia eliminada');
+      queryClient.invalidateQueries({ queryKey: ['app-anomalies'] });
+    },
+    onError: () => toast.error('Erro ao eliminar anomalia'),
   });
 
   const { mutate: submit, isPending } = useMutation({
@@ -137,9 +146,23 @@ export default function AnomaliaPage() {
               <div key={a.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-gray-900 text-sm leading-snug">{a.title}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${statusColor[a.status]}`}>
-                    {statusLabel[a.status]}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${statusColor[a.status]}`}>
+                      {statusLabel[a.status]}
+                    </span>
+                    {a.status === 'RESOLVED' && (
+                      <button
+                        onClick={() => {
+                          if (confirm('Apagar esta anomalia resolvida?')) {
+                            deleteAnomaly(a.id);
+                          }
+                        }}
+                        className="text-red-400 active:text-red-600 p-1"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {a.description && (
                   <p className="text-xs text-gray-500 mt-1 line-clamp-2">{a.description}</p>
