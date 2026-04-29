@@ -157,7 +157,7 @@ export default function LoginPage() {
       </div>
 
       {/* ── Coluna direita — formulário ── */}
-      <div className="flex flex-1 flex-col items-center justify-center bg-gray-50 px-6 py-12 lg:max-w-md lg:w-full">
+      <div className="flex flex-1 flex-col items-center justify-start bg-gray-50 px-6 pt-12 pb-8 lg:max-w-md lg:w-full">
         <div className="w-full max-w-sm">
           {/* Logo mobile */}
           <div className="mb-8 text-center lg:hidden">
