@@ -65,7 +65,7 @@ export class ConsumablesService {
     return this.prisma.consumableReport.findMany({
       where: clientId ? { stock: { clientId } } : undefined,
       include: {
-        stock: { include: { product: true } },
+        stock: { include: { product: true, client: { select: { id: true, name: true } } } },
         reporter: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },

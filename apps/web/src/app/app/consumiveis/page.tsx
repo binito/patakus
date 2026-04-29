@@ -4,20 +4,21 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Package, AlertCircle, Send, ChevronDown, ChevronUp,
-  Clock, Truck, CheckCircle2, List,
+  Clock, Truck, CheckCircle2, List, Building2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { ConsumableStock } from '@/types';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { useAuthStore } from '@/store/auth.store';
 
 type ReportStatus = 'OPEN' | 'ORDERED' | 'RESOLVED';
 
 interface ShortageReport {
   id: string; quantity?: number; notes?: string;
   status: ReportStatus; createdAt: string;
-  stock?: { product?: { name: string; unit: string } };
+  stock?: { product?: { name: string; unit: string }; client?: { id: string; name: string } };
 }
 
 const statusConfig: Record<ReportStatus, { label: string; color: string; icon: React.ElementType }> = {
@@ -28,6 +29,8 @@ const statusConfig: Record<ReportStatus, { label: string; color: string; icon: R
 
 export default function ConsumiveisPage() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const [tab, setTab] = useState<'report' | 'orders'>('report');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, string>>({});
@@ -206,9 +209,17 @@ export default function ConsumiveisPage() {
             return (
               <div key={r.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-gray-800 text-sm leading-snug">
-                    {r.stock?.product?.name ?? '—'}
-                  </p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-800 text-sm leading-snug">
+                      {r.stock?.product?.name ?? '—'}
+                    </p>
+                    {isSuperAdmin && r.stock?.client && (
+                      <p className="flex items-center gap-1 text-xs text-blue-600 mt-0.5">
+                        <Building2 size={11} />
+                        {r.stock.client.name}
+                      </p>
+                    )}
+                  </div>
                   <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${cfg.color} shrink-0`}>
                     <Icon size={11} />
                     {cfg.label}
