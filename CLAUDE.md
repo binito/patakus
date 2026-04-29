@@ -32,14 +32,27 @@ apps/web/src/app/app/
 - **Web:** `patakus.cafemartins.pt/` → proxy para `localhost:3000`
 - **Servidor:** Raspberry Pi em `192.168.1.176`
 
-Após alterações, reiniciar os servidores sem pedir confirmação:
+### Processos em produção (PM2)
+
+Os servidores correm em **modo produção** geridos pelo PM2, com arranque automático no boot via systemd (`pm2-jorge.service`).
+
+Após alterações, fazer build e reiniciar com PM2 (sem pedir confirmação):
 ```bash
 # API (NestJS)
-pkill -f "nest start" && cd /home/jorge/patakus && npm run dev --workspace=apps/api &
+npm run build --workspace=apps/api && pm2 restart patakus-api
 
-# Web (Next.js)
-pkill -f "next dev" && cd /home/jorge/patakus && npm run dev --workspace=apps/web &
+# Web (Next.js) — SEMPRE com NODE_ENV=production para evitar build corrompido
+NODE_ENV=production npm run build --workspace=apps/web && pm2 restart patakus-web
 ```
+
+Comandos úteis:
+```bash
+pm2 list                    # estado dos processos
+pm2 logs patakus-web        # logs em tempo real
+pm2 logs patakus-api
+```
+
+O ficheiro de configuração do PM2 está em `/home/jorge/patakus/ecosystem.config.js`.
 
 ## Stack
 

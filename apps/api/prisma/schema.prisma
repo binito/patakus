@@ -536,3 +536,22 @@ model ReportShare {
   @@index([clientId])
   @@map("report_shares")
 }
+
+// ─────────────────────────────────────────────
+// CONVITES
+// ─────────────────────────────────────────────
+
+model Invitation {
+  id          String   @id @default(uuid())
+  token       String   @unique
+  email       String?
+  role        Role     @default(CLIENT_ADMIN)
+  clientId    String
+  used        Boolean  @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  createdById String
+
+  @@index([clientId])
+  @@map("invitations")
+}

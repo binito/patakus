@@ -1,0 +1,70 @@
+2026-04-28 12:24:06 [patakus-web] offline — a reiniciar...
+[1m[34mUse --update-env to update environment variables[39m[22m
+[32m[PM2] [39mApplying action restartProcessId on app [patakus-web](ids: [ 1 ])
+[32m[PM2] [39m[patakus-web](1) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ [1m[36m0[39m[22m  │ patakus-api    │ default     │ 0.1.0   │ [34m[1mcluster[22m[39m │ 1433     │ 2m     │ 0    │ [32m[1monline[22m[39m    │ 0%       │ 96.8mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+│ [1m[36m1[39m[22m  │ patakus-web    │ default     │ N/A     │ [34m[1mcluster[22m[39m │ 8992     │ 0s     │ 336  │ [32m[1monline[22m[39m    │ 0%       │ 44.3mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2026-04-28 12:44:06 [patakus-web] offline — a reiniciar...
+[1m[34mUse --update-env to update environment variables[39m[22m
+[32m[PM2] [39mApplying action restartProcessId on app [patakus-web](ids: [ 1 ])
+[32m[PM2] [39m[patakus-web](1) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ [1m[36m0[39m[22m  │ patakus-api    │ default     │ 0.1.0   │ [34m[1mcluster[22m[39m │ 1379     │ 2m     │ 0    │ [32m[1monline[22m[39m    │ 0%       │ 97.3mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+│ [1m[36m1[39m[22m  │ patakus-web    │ default     │ N/A     │ [34m[1mcluster[22m[39m │ 10795    │ 0s     │ 390  │ [32m[1monline[22m[39m    │ 0%       │ 43.1mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2026-04-28 13:34:06 [patakus-web] offline — a reiniciar...
+[1m[34mUse --update-env to update environment variables[39m[22m
+[32m[PM2] [39mApplying action restartProcessId on app [patakus-web](ids: [ 1 ])
+[32m[PM2] [39m[patakus-web](1) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ [1m[36m0[39m[22m  │ patakus-api    │ default     │ 0.1.0   │ [34m[1mcluster[22m[39m │ 1463     │ 4m     │ 0    │ [32m[1monline[22m[39m    │ 0%       │ 96.5mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+│ [1m[36m1[39m[22m  │ patakus-web    │ default     │ N/A     │ [34m[1mcluster[22m[39m │ 12495    │ 0s     │ 604  │ [32m[1monline[22m[39m    │ 0%       │ 42.9mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2026-04-28 13:44:06 [patakus-web] offline — a reiniciar...
+[1m[34mUse --update-env to update environment variables[39m[22m
+[32m[PM2] [39mApplying action restartProcessId on app [patakus-web](ids: [ 1 ])
+[32m[PM2] [39m[patakus-web](1) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ [1m[36m0[39m[22m  │ patakus-api    │ default     │ 0.1.0   │ [34m[1mcluster[22m[39m │ 1519     │ 2m     │ 0    │ [32m[1monline[22m[39m    │ 0%       │ 96.9mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+│ [1m[36m1[39m[22m  │ patakus-web    │ default     │ N/A     │ [34m[1mcluster[22m[39m │ 11076    │ 0s     │ 397  │ [32m[1monline[22m[39m    │ 0%       │ 43.7mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2026-04-28 14:34:06 [patakus-web] offline — a reiniciar...
+[1m[34mUse --update-env to update environment variables[39m[22m
+[32m[PM2] [39mApplying action restartProcessId on app [patakus-web](ids: [ 1 ])
+[32m[PM2] [39m[patakus-web](1) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ [1m[36m0[39m[22m  │ patakus-api    │ default     │ 0.1.0   │ [34m[1mcluster[22m[39m │ 1384     │ 2m     │ 0    │ [32m[1monline[22m[39m    │ 0%       │ 96.7mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+│ [1m[36m1[39m[22m  │ patakus-web    │ default     │ N/A     │ [34m[1mcluster[22m[39m │ 9710     │ 0s     │ 341  │ [32m[1monline[22m[39m    │ 0%       │ 42.0mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2026-04-29 05:08:06 [patakus-web] offline — a reiniciar...
+[1m[34mUse --update-env to update environment variables[39m[22m
+[32m[PM2] [39mApplying action restartProcessId on app [patakus-web](ids: [ 1 ])
+[32m[PM2] [39m[patakus-web](1) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ [1m[36m0[39m[22m  │ patakus-api    │ default     │ 0.1.0   │ [34m[1mcluster[22m[39m │ 1384     │ 2m     │ 0    │ [32m[1monline[22m[39m    │ 0%       │ 97.5mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+│ [1m[36m1[39m[22m  │ patakus-web    │ default     │ N/A     │ [34m[1mcluster[22m[39m │ 11091    │ 0s     │ 436  │ [32m[1monline[22m[39m    │ 0%       │ 42.8mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2026-04-29 15:48:06 [patakus-web] offline — a reiniciar...
+[1m[34mUse --update-env to update environment variables[39m[22m
+[32m[PM2] [39mApplying action restartProcessId on app [patakus-web](ids: [ 1 ])
+[32m[PM2] [39m[patakus-web](1) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ [1m[36m0[39m[22m  │ patakus-api    │ default     │ 0.1.0   │ [34m[1mcluster[22m[39m │ 40394    │ 5h     │ 1    │ [32m[1monline[22m[39m    │ 0%       │ 102.7mb  │ [1mjorge[22m    │ [90mdisabled[39m │
+│ [1m[36m1[39m[22m  │ patakus-web    │ default     │ N/A     │ [34m[1mcluster[22m[39m │ 73698    │ 0s     │ 450  │ [32m[1monline[22m[39m    │ 0%       │ 42.6mb   │ [1mjorge[22m    │ [90mdisabled[39m │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
