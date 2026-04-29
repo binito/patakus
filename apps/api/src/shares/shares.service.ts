@@ -26,14 +26,17 @@ export class SharesService {
     const share = await this.prisma.reportShare.findUnique({ where: { id } });
     if (!share) throw new NotFoundException('Partilha não encontrada');
 
-    const params = share.params as any;
-    const data = await this.fetchData(share.type, share.clientId, params);
+    const [client, data] = await Promise.all([
+      this.prisma.client.findUnique({ where: { id: share.clientId }, select: { name: true } }),
+      this.fetchData(share.type, share.clientId, share.params as any),
+    ]);
 
     return {
       type: share.type,
       label: share.label,
       createdAt: share.createdAt,
-      params,
+      params: share.params,
+      clientName: client?.name ?? null,
       data,
     };
   }

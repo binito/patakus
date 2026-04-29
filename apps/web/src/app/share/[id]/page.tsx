@@ -13,6 +13,7 @@ interface ShareData {
   label: string;
   createdAt: string;
   params: Record<string, string>;
+  clientName: string | null;
   data: any[];
 }
 
@@ -270,11 +271,20 @@ export default function SharePage() {
             <div className="bg-blue-700 text-white rounded-2xl px-6 py-5">
               <p className="text-xs font-medium uppercase tracking-wider text-blue-200 mb-1">Registo HACCP</p>
               <h1 className="text-xl font-bold">{TYPE_LABELS[data.type]}</h1>
-              <p className="text-sm text-blue-200 mt-1">{data.label}</p>
+              {data.clientName && (
+                <p className="text-base font-semibold text-white mt-1">{data.clientName}</p>
+              )}
+              <p className="text-sm text-blue-200 mt-0.5">{data.label}</p>
             </div>
 
             {/* Metadados */}
-            <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+            <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+              {data.clientName && (
+                <div>
+                  <p className="text-xs text-gray-500">Estabelecimento</p>
+                  <p className="font-semibold text-gray-900">{data.clientName}</p>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-gray-500">Total de registos</p>
                 <p className="font-bold text-gray-900 text-lg">{data.data.length}</p>
