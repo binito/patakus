@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { UserCircle, Plus, Pencil, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { UserCircle, Plus, Pencil, ShieldCheck, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Card } from '@/components/ui/Card';
@@ -76,6 +76,12 @@ export default function UsersPage() {
     onError: () => toast.error('Erro ao desativar'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/users/${id}/permanent`).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); toast.success('Utilizador eliminado'); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao eliminar'),
+  });
+
   function openNew() {
     setEditing(null);
     reset({
@@ -145,8 +151,16 @@ export default function UsersPage() {
                 <div className="flex items-center gap-2 ml-4">
                   {u.id !== me?.id && u.active && (
                     <button onClick={() => { if (confirm(`Desativar ${u.name}?`)) deactivateMutation.mutate(u.id); }}
-                      className="rounded p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500">
+                      className="rounded p-1.5 text-gray-300 hover:bg-orange-50 hover:text-orange-500"
+                      title="Desativar">
                       <ShieldCheck className="h-4 w-4" />
+                    </button>
+                  )}
+                  {u.id !== me?.id && (
+                    <button onClick={() => { if (confirm(`Apagar permanentemente ${u.name}? Esta ação não pode ser desfeita.`)) deleteMutation.mutate(u.id); }}
+                      className="rounded p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"
+                      title="Apagar permanentemente">
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   )}
                   <button onClick={() => openEdit(u)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">

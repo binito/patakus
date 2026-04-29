@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { UserCircle, List, Plus, Pencil, Eye, EyeOff, X } from 'lucide-react';
+import { UserCircle, List, Plus, Pencil, Eye, EyeOff, X, ShieldOff, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
@@ -40,6 +40,18 @@ export default function UtilizadoresMobilePage() {
       return api.get('/clients').then(r => r.data);
     },
     enabled: !!me && me.role !== 'OPERATOR',
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/users/${id}`).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); toast.success('Utilizador desativado'); },
+    onError: () => toast.error('Erro ao desativar'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/users/${id}/permanent`).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); toast.success('Utilizador eliminado'); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao eliminar'),
   });
 
   const saveMutation = useMutation({
@@ -152,9 +164,27 @@ export default function UtilizadoresMobilePage() {
                       {u.active ? 'Ativo' : 'Inativo'}
                     </span>
                     {u.id !== me?.id && (
-                      <button onClick={() => openEdit(u)} className="p-2 text-gray-400 active:text-blue-600">
-                        <Pencil size={15} />
-                      </button>
+                      <>
+                        {u.active && (
+                          <button
+                            onClick={() => { if (confirm(`Desativar ${u.name}?`)) deactivateMutation.mutate(u.id); }}
+                            className="p-2 text-gray-400 active:text-orange-500"
+                            title="Desativar"
+                          >
+                            <ShieldOff size={15} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { if (confirm(`Apagar permanentemente ${u.name}? Esta ação não pode ser desfeita.`)) deleteMutation.mutate(u.id); }}
+                          className="p-2 text-gray-400 active:text-red-500"
+                          title="Apagar"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                        <button onClick={() => openEdit(u)} className="p-2 text-gray-400 active:text-blue-600">
+                          <Pencil size={15} />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
