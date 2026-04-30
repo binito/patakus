@@ -3,6 +3,7 @@ import { OrderStatus, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../common/types/auth-user.type';
 import { assertOwnership } from '../common/utils/tenant.util';
+import { CursorPaginationDto, PaginatedResult, paginate } from '../common/dto/pagination.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
@@ -32,13 +33,17 @@ export class OrdersService {
     });
   }
 
-  async findAll(clientId?: string) {
-    return this.prisma.order.findMany({
+  async findAll(clientId?: string, pagination: CursorPaginationDto = {}): Promise<PaginatedResult<any>> {
+    const take = pagination.take ?? 50;
+    const items = await this.prisma.order.findMany({
       where: clientId ? { clientId } : undefined,
       include: { items: { include: { product: true } } },
       orderBy: { createdAt: 'desc' },
-      take: 200,
+      take: take + 1,
+      skip: pagination.cursor ? 1 : 0,
+      cursor: pagination.cursor ? { id: pagination.cursor } : undefined,
     });
+    return paginate(items, take);
   }
 
   async findOne(id: string, actor: AuthUser) {

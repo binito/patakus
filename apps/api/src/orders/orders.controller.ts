@@ -6,6 +6,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { AuthUser } from '../common/types/auth-user.type';
+import { CursorPaginationDto } from '../common/dto/pagination.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrdersService } from './orders.service';
 
@@ -22,9 +23,14 @@ export class OrdersController {
 
   @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Get()
-  findAll(@TenantId() clientId: string, @CurrentUser() user: AuthUser) {
+  findAll(
+    @TenantId() clientId: string,
+    @Query() pagination: CursorPaginationDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.ordersService.findAll(
       user.role === Role.SUPER_ADMIN ? (clientId || undefined) : clientId,
+      pagination,
     );
   }
 
