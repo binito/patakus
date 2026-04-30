@@ -86,6 +86,7 @@ function HigienizacaoTable({ data }: { data: any[] }) {
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-3">
                 <span className="font-bold text-gray-900 text-sm">{fmt(r.dia)}</span>
+                <span className="text-xs text-gray-500">{new Date(r.createdAt).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</span>
                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{r.zona}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${allOk ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                   {ok}/{total} itens
