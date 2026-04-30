@@ -23,24 +23,30 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      # Falha o build se existirem vulnerabilidades high ou critical
-      # As vulnerabilidades que requerem breaking changes (NestJS v11, Next.js 16) estão
-      # documentadas na auditoria técnica e aguardam upgrade planeado.
-      - name: Audit API dependencies
-        run: npm audit --audit-level=critical --workspace=apps/api
+      # Falha o build em vulnerabilidades critical (sem exceções)
+      - name: Audit API — critical
+        run: npm audit --audit-level=critical -w apps/api
+
+      - name: Audit Web — critical
+        run: npm audit --audit-level=critical -w apps/web
+
+      # Vulnerabilidades high/moderate registadas como aviso (requerem NestJS v11 / Next 16)
+      # Ver: docs/security-audit.md para plano de remediação
+      - name: Audit API — high/moderate (informativo)
+        run: npm audit --audit-level=high -w apps/api
         continue-on-error: true
 
-      - name: Audit Web dependencies
-        run: npm audit --audit-level=critical --workspace=apps/web
+      - name: Audit Web — high/moderate (informativo)
+        run: npm audit --audit-level=high -w apps/web
         continue-on-error: true
 
-      # Gera relatório completo como artefacto para revisão
+      # Relatório completo como artefacto para revisão
       - name: Generate audit report
         run: |
           echo "## API" > audit-report.txt
-          npm audit --workspace=apps/api 2>&1 >> audit-report.txt || true
+          npm audit -w apps/api 2>&1 >> audit-report.txt || true
           echo -e "\n## Web" >> audit-report.txt
-          npm audit --workspace=apps/web 2>&1 >> audit-report.txt || true
+          npm audit -w apps/web 2>&1 >> audit-report.txt || true
 
       - name: Upload audit report
         uses: actions/upload-artifact@v4
@@ -73,7 +79,7 @@ jobs:
           DATABASE_URL: mysql://user:pass@localhost:3306/db
 
       - name: Run API tests
-        run: npm test --workspace=apps/api -- --coverage
+        run: npm test -w apps/api -- --coverage
         env:
           DATABASE_URL: mysql://user:pass@localhost:3306/db
           JWT_SECRET: test-secret-for-ci-only-not-production
@@ -112,7 +118,7 @@ jobs:
           DATABASE_URL: mysql://user:pass@localhost:3306/db
 
       - name: Build API
-        run: npm run build --workspace=apps/api
+        run: npm run build -w apps/api
         env:
           DATABASE_URL: mysql://user:pass@localhost:3306/db
           JWT_SECRET: build-placeholder
@@ -120,6 +126,6 @@ jobs:
           ALLOWED_ORIGINS: https://placeholder.example.com
 
       - name: Build Web
-        run: npm run build --workspace=apps/web
+        run: npm run build -w apps/web
         env:
           NEXT_PUBLIC_API_URL: /api

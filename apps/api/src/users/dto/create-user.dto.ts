@@ -19,7 +19,9 @@ export class CreateUserDto {
 
   @IsString()
   @MinLength(8, { message: 'A password deve ter pelo menos 8 caracteres' })
-  @Matches(/(?=.*[A-Za-z])(?=.*\d)/, { message: 'A password deve conter pelo menos uma letra e um número' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+{};:,<.>]).{8,}$/, {
+    message: 'A password deve conter maiúscula, minúscula, número e símbolo (!@#$%…)',
+  })
   password: string;
 
   @IsEnum(Role)

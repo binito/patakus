@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Query, Res, UseGuards } fro
 import { Response } from 'express';
 import { randomBytes } from 'crypto';
 import { Role } from '@prisma/client';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -41,6 +42,8 @@ export class InvitationsController {
     return this.invitationsService.validate(token);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UseGuards(ThrottlerGuard)
   @Post(':token/accept')
   async accept(
     @Param('token') token: string,
