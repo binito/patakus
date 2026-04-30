@@ -72,32 +72,54 @@ function EntradasTable({ data }: { data: any[] }) {
 
 function HigienizacaoTable({ data }: { data: any[] }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead className="bg-blue-700 text-white">
-          <tr>
-            {['Data', 'Zona', 'Itens OK / Total', 'Observações', 'Operador'].map(h => (
-              <th key={h} className="px-3 py-2 text-left font-medium">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((r, i) => {
-            const itens = r.itens as Record<string, boolean> ?? {};
-            const ok = Object.values(itens).filter(Boolean).length;
-            const total = Object.values(itens).length;
-            return (
-              <tr key={r.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="px-3 py-2 whitespace-nowrap">{fmt(r.dia)}</td>
-                <td className="px-3 py-2">{r.zona}</td>
-                <td className={`px-3 py-2 font-medium ${ok === total ? 'text-green-600' : 'text-orange-600'}`}>{ok}/{total}</td>
-                <td className="px-3 py-2">{r.observacoes ?? '—'}</td>
-                <td className="px-3 py-2">{r.operator.name}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="divide-y divide-gray-200">
+      {data.map((r) => {
+        const itens = (r.itens ?? {}) as Record<string, boolean>;
+        const entries = Object.entries(itens);
+        const ok = entries.filter(([, v]) => v).length;
+        const total = entries.length;
+        const allOk = ok === total;
+
+        return (
+          <div key={r.id} className="p-4">
+            {/* Cabeçalho do registo */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-gray-900 text-sm">{fmt(r.dia)}</span>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{r.zona}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${allOk ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                  {ok}/{total} itens
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">{r.operator.name}</span>
+            </div>
+
+            {/* Grelha de itens */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+              {entries.map(([label, done]) => (
+                <div
+                  key={label}
+                  className={`flex items-center gap-1.5 rounded px-2 py-1 text-xs ${
+                    done
+                      ? 'bg-green-50 text-green-800'
+                      : 'bg-red-50 text-red-700'
+                  }`}
+                >
+                  {done
+                    ? <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
+                    : <XCircle className="h-3 w-3 text-red-400 shrink-0" />}
+                  <span className="truncate">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Observações */}
+            {r.observacoes && (
+              <p className="mt-2 text-xs text-gray-500 italic">Obs: {r.observacoes}</p>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
