@@ -9,6 +9,8 @@ export class SharesService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateShareDto, actor: AuthUser) {
+    // Para SUPER_ADMIN sem clientId próprio, usa o clientId do DTO se fornecido;
+    // se mesmo assim vazio, guarda '' e fetchData tratará como "todos os clientes".
     const clientId = dto.clientId ?? actor.clientId ?? '';
     return this.prisma.reportShare.create({
       data: {
@@ -27,7 +29,9 @@ export class SharesService {
     if (!share) throw new NotFoundException('Partilha não encontrada');
 
     const [client, data] = await Promise.all([
-      this.prisma.client.findUnique({ where: { id: share.clientId }, select: { name: true } }),
+      share.clientId
+        ? this.prisma.client.findUnique({ where: { id: share.clientId }, select: { name: true } })
+        : Promise.resolve(null),
       this.fetchData(share.type, share.clientId, share.params as any),
     ]);
 
@@ -54,10 +58,13 @@ export class SharesService {
   }
 
   private async fetchData(type: ReportType, clientId: string, params: any) {
+    // clientId vazio significa SUPER_ADMIN sem filtro de cliente — mostrar todos
+    const cid = clientId || undefined;
+
     switch (type) {
       case ReportType.ENTRADAS:
         return this.prisma.entradaRecord.findMany({
-          where: { clientId, ...this.dateWhere('data', params) },
+          where: { ...(cid ? { clientId: cid } : {}), ...this.dateWhere('data', params) },
           include: { operator: { select: { name: true } } },
           orderBy: { data: 'desc' },
           take: 500,
@@ -66,7 +73,7 @@ export class SharesService {
       case ReportType.HIGIENIZACAO:
         return this.prisma.higienizacaoRecord.findMany({
           where: {
-            clientId,
+            ...(cid ? { clientId: cid } : {}),
             ...this.dateWhere('dia', params),
             ...(params.zona ? { zona: params.zona } : {}),
           },
@@ -77,7 +84,7 @@ export class SharesService {
 
       case ReportType.DESINFECAO:
         return this.prisma.desinfecaoRecord.findMany({
-          where: { clientId, ...this.dateWhere('data', params) },
+          where: { ...(cid ? { clientId: cid } : {}), ...this.dateWhere('data', params) },
           include: { operator: { select: { name: true } } },
           orderBy: { data: 'desc' },
           take: 500,
@@ -85,7 +92,7 @@ export class SharesService {
 
       case ReportType.OLEOS:
         return this.prisma.oleoFrituraRecord.findMany({
-          where: { clientId, ...this.dateWhere('data', params) },
+          where: { ...(cid ? { clientId: cid } : {}), ...this.dateWhere('data', params) },
           include: { responsavel: { select: { name: true } } },
           orderBy: { data: 'desc' },
           take: 500,
@@ -94,7 +101,7 @@ export class SharesService {
       case ReportType.TEMPERATURAS:
         return this.prisma.temperatureRecord.findMany({
           where: {
-            equipment: { clientId },
+            ...(cid ? { equipment: { clientId: cid } } : {}),
             ...this.dateWhere('recordedAt', params),
           },
           include: {
@@ -108,7 +115,7 @@ export class SharesService {
       case ReportType.CHECKLISTS:
         return this.prisma.checklistEntry.findMany({
           where: {
-            area: { clientId },
+            ...(cid ? { area: { clientId: cid } } : {}),
             ...this.dateWhere('completedAt', params),
           },
           include: {
