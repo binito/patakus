@@ -17,7 +17,7 @@ export default function AppHomePage() {
 
   const { data: openAnomalies } = useQuery({
     queryKey: ['app-open-anomalies'],
-    queryFn: () => api.get('/reports/anomalies?status=OPEN').then(r => r.data),
+    queryFn: () => api.get('/reports/anomalies?status=OPEN').then(r => r.data.data),
   });
 
   const greeting = () => {

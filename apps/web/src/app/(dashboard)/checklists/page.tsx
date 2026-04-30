@@ -172,7 +172,7 @@ export default function ChecklistsPage() {
 
   const { data: executions, isLoading: execLoading } = useQuery<EntryRow[]>({
     queryKey: ['checklist-entries'],
-    queryFn: () => api.get('/checklists/entries').then(r => r.data),
+    queryFn: () => api.get('/checklists/entries').then(r => r.data.data),
     enabled: tab === 'history',
   });
 

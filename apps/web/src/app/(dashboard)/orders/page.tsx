@@ -12,7 +12,7 @@ import { ptBR } from 'date-fns/locale';
 export default function OrdersPage() {
   const { data: orders, isLoading: ordersLoading } = useQuery<Order[]>({
     queryKey: ['orders'],
-    queryFn: () => api.get('/orders').then((r) => r.data),
+    queryFn: () => api.get('/orders').then((r) => r.data.data),
   });
 
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery<Consumable[]>({

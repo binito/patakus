@@ -42,7 +42,7 @@ export default function AnomaliaPage() {
 
   const { data: anomalies, isLoading } = useQuery<Anomaly[]>({
     queryKey: ['app-anomalies'],
-    queryFn: () => api.get('/reports/anomalies').then(r => r.data),
+    queryFn: () => api.get('/reports/anomalies').then(r => r.data.data),
   });
 
   const { mutate: deleteAnomaly } = useMutation({

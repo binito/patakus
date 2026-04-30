@@ -59,7 +59,7 @@ export default function DashboardPage() {
 
   const { data: recentAnomalies, isLoading: anomaliesLoading } = useQuery<Anomaly[]>({
     queryKey: ['recent-anomalies'],
-    queryFn: () => api.get('/reports/anomalies?status=OPEN').then(r => r.data),
+    queryFn: () => api.get('/reports/anomalies?status=OPEN').then(r => r.data.data),
   });
 
   const { data: openShortages, isLoading: shortagesLoading } = useQuery<ShortageReport[]>({

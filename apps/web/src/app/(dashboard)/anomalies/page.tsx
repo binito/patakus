@@ -32,7 +32,7 @@ export default function AnomaliesPage() {
     queryKey: ['anomalies', statusFilter],
     queryFn: () => {
       const params = statusFilter ? `?status=${statusFilter}` : '';
-      return api.get(`/reports/anomalies${params}`).then((r) => r.data);
+      return api.get(`/reports/anomalies${params}`).then((r) => r.data.data);
     },
   });
 
