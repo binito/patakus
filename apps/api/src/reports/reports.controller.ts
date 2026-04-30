@@ -12,6 +12,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { CursorPaginationDto } from '../common/dto/pagination.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -69,12 +70,14 @@ export class ReportsController {
     @TenantId() clientId: string,
     @Query('areaId') areaId: string,
     @Query('status') status: string,
+    @Query() pagination: CursorPaginationDto,
     @CurrentUser() user: AuthUser,
   ) {
     return this.reportsService.findAll(
       user.role === Role.SUPER_ADMIN ? (clientId || undefined) : clientId,
       areaId,
       status as AnomalyStatus,
+      pagination,
     );
   }
 

@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import * as Sentry from '@sentry/nestjs';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -22,22 +23,39 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : 'Erro interno do servidor';
-
     if (status >= 500) {
       this.logger.error(
         `${req.method} ${req.url} → ${status}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
+      Sentry.captureException(exception);
+      res.status(status).json({ statusCode: status, message: 'Erro interno do servidor' });
+      return;
     }
 
-    res.status(status).json(
-      status >= 500
-        ? { statusCode: status, message: 'Erro interno do servidor' }
-        : message,
-    );
+    this.logger.warn(`${req.method} ${req.url} → ${status}`);
+
+    if (!(exception instanceof HttpException)) {
+      res.status(status).json({ statusCode: status, message: 'Erro interno do servidor' });
+      return;
+    }
+
+    const response = exception.getResponse();
+
+    // Erros de validação (400) devolvem array de mensagens — necessário para o frontend
+    if (status === HttpStatus.BAD_REQUEST && typeof response === 'object') {
+      res.status(status).json(response);
+      return;
+    }
+
+    // Restantes 4xx: mensagem normalizada (sem expor detalhes de implementação)
+    const message =
+      typeof response === 'string'
+        ? response
+        : typeof response === 'object' && 'message' in (response as object)
+          ? (response as { message: string }).message
+          : HttpStatus[status] ?? 'Erro';
+
+    res.status(status).json({ statusCode: status, message });
   }
 }

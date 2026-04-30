@@ -23,7 +23,7 @@ function parseCsvProducts(): Array<{
   const content = fs.readFileSync(csvPath, 'utf-8');
   const lines = content.split('\n');
 
-  const products = [];
+  const products: Array<{ sku: string; name: string; category: string | null; brand: string | null; price: number | null; active: boolean }> = [];
 
   // Skip header (line 0) and text-free entry (line 1 with sku ".")
   for (let i = 1; i < lines.length; i++) {

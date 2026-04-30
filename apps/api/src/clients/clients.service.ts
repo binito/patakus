@@ -54,6 +54,12 @@ export class ClientsService {
     });
   }
 
+  async permanentDelete(id: string) {
+    await this.findOne(id);
+    await this.prisma.client.delete({ where: { id } });
+    return { deleted: true };
+  }
+
   private async cloneDefaultTemplates(clientId: string) {
     const defaults = await this.prisma.checklistTemplate.findMany({
       where: { isDefault: true, active: true },

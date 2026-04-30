@@ -48,6 +48,12 @@ export class ClientsController {
   }
 
   @Roles(Role.SUPER_ADMIN)
+  @Delete(':id/permanent')
+  permanentDelete(@Param('id') id: string) {
+    return this.clientsService.permanentDelete(id);
+  }
+
+  @Roles(Role.SUPER_ADMIN)
   @Delete(':id')
   deactivate(@Param('id') id: string) {
     return this.clientsService.deactivate(id);

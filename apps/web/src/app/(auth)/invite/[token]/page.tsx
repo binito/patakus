@@ -57,12 +57,12 @@ export default function InvitePage() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const res = await api.post(`/invitations/${token}/accept`, {
+      const res = await api.post<{ access_token: string; user: import('@/types').User }>(`/invitations/${token}/accept`, {
         name: data.name,
         email: data.email,
         password: data.password,
       });
-      login(res.data.user);
+      login(res.data.user, res.data.access_token);
       toast.success(`Bem-vindo, ${res.data.user.name}!`);
       router.replace('/dashboard');
     } catch (e: any) {

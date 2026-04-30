@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { CursorPaginationDto } from '../common/dto/pagination.dto';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
@@ -69,12 +70,14 @@ export class ChecklistsController {
   @Get('entries')
   findEntries(
     @Query('areaId') areaId: string,
+    @Query() pagination: CursorPaginationDto,
     @TenantId() clientId: string,
     @CurrentUser() user: AuthUser,
   ) {
     return this.checklistsService.findEntries(
       user.role === Role.SUPER_ADMIN ? (clientId || undefined) : clientId,
       areaId,
+      pagination,
     );
   }
 

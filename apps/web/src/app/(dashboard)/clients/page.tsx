@@ -80,6 +80,12 @@ export default function ClientsPage() {
     onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao gerar convite'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/clients/${id}/permanent`).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['clients'] }); toast.success('Cliente eliminado permanentemente'); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao eliminar cliente'),
+  });
+
   const revokeInviteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/invitations/${id}`),
     onSuccess: () => {
@@ -174,6 +180,13 @@ export default function ClientsPage() {
                   </button>
                   <button onClick={(e) => { e.preventDefault(); openEdit(client); }} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
                     <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); if (confirm(`Apagar permanentemente "${client.name}"? Esta ação elimina todos os dados associados e não pode ser desfeita.`)) deleteMutation.mutate(client.id); }}
+                    className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    title="Apagar permanentemente"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </button>
                   <ChevronRight className="h-4 w-4 text-gray-300" />
                 </div>

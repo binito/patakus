@@ -3,6 +3,7 @@ import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../common/types/auth-user.type';
 import { assertOwnership } from '../common/utils/tenant.util';
+import { CursorPaginationDto, PaginatedResult, paginate } from '../common/dto/pagination.dto';
 import { CreateTemplateDto, CreateChecklistTaskDto } from './dto/create-template.dto';
 import { SubmitChecklistDto } from './dto/submit-checklist.dto';
 
@@ -131,8 +132,13 @@ export class ChecklistsService {
     });
   }
 
-  async findEntries(clientId?: string, areaId?: string) {
-    return this.prisma.checklistEntry.findMany({
+  async findEntries(
+    clientId?: string,
+    areaId?: string,
+    pagination: CursorPaginationDto = {},
+  ): Promise<PaginatedResult<any>> {
+    const take = pagination.take ?? 50;
+    const items = await this.prisma.checklistEntry.findMany({
       where: {
         ...(areaId ? { areaId } : {}),
         ...(clientId ? { area: { clientId } } : {}),
@@ -144,8 +150,11 @@ export class ChecklistsService {
         operator: { select: { name: true } },
       },
       orderBy: { completedAt: 'desc' },
-      take: 200,
+      take: take + 1,
+      skip: pagination.cursor ? 1 : 0,
+      cursor: pagination.cursor ? { id: pagination.cursor } : undefined,
     });
+    return paginate(items, take);
   }
 
   async findOneEntry(id: string, actor: AuthUser) {

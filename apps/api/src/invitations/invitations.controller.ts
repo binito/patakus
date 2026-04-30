@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
+import { randomBytes } from 'crypto';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -48,12 +49,16 @@ export class InvitationsController {
   ) {
     const result = await this.invitationsService.accept(token, dto);
     const isProduction = process.env.NODE_ENV === 'production';
-    res.cookie('patakus_token', result.access_token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    const ttl = 7 * 24 * 60 * 60 * 1000;
+    const csrfToken = randomBytes(32).toString('hex');
+
+    res.cookie('patakus_refresh', result.refresh_token, {
+      httpOnly: true, secure: isProduction, sameSite: 'strict', maxAge: ttl, path: '/',
     });
-    return { user: result.user };
+    res.cookie('csrf_token', csrfToken, {
+      httpOnly: false, secure: isProduction, sameSite: 'strict', maxAge: ttl, path: '/',
+    });
+
+    return { access_token: result.access_token, user: result.user };
   }
 }

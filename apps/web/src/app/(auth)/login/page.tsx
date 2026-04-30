@@ -84,8 +84,8 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const res = await api.post<{ user: import('@/types').User }>('/auth/login', data);
-      login(res.data.user);
+      const res = await api.post<{ access_token: string; user: import('@/types').User }>('/auth/login', data);
+      login(res.data.user, res.data.access_token);
       toast.success('Login realizado com sucesso!');
       router.replace(isMobile() ? '/app' : '/dashboard');
     } catch (err: unknown) {

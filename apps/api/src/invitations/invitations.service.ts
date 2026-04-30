@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthService } from '../auth/auth.service';
 import { AuthUser } from '../common/types/auth-user.type';
 import { AcceptInvitationDto, CreateInvitationDto } from './dto/create-invitation.dto';
 
@@ -14,7 +14,7 @@ const EXPIRES_DAYS = 7;
 export class InvitationsService {
   constructor(
     private prisma: PrismaService,
-    private jwt: JwtService,
+    private authService: AuthService,
   ) {}
 
   async create(dto: CreateInvitationDto, actor: AuthUser) {
@@ -35,7 +35,7 @@ export class InvitationsService {
       },
     });
 
-    const frontendUrl = process.env.FRONTEND_URL ?? 'https://patakusclean.patakus.pt';
+    const frontendUrl = process.env.FRONTEND_URL as string;
     return {
       id: invitation.id,
       token: invitation.token,
@@ -104,10 +104,6 @@ export class InvitationsService {
 
     await this.prisma.invitation.update({ where: { id: inv.id }, data: { used: true } });
 
-    const payload = { sub: user.id, email: user.email, role: user.role, clientId: user.clientId };
-    return {
-      access_token: this.jwt.sign(payload),
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, clientId: user.clientId },
-    };
+    return this.authService['issueTokens'](user);
   }
 }

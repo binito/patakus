@@ -39,9 +39,22 @@ model User {
   higienizacaoRecords HigienizacaoRecord[]
   desinfecaoRecords DesinfecaoRecord[]
   oleoFrituraRecords OleoFrituraRecord[]
+  refreshTokens    RefreshToken[]
 
   @@index([clientId])
   @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }
 
 // ─────────────────────────────────────────────
