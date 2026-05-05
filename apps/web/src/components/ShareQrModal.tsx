@@ -34,18 +34,20 @@ const TYPE_LABELS: Record<ShareReportType, string> = {
 
 export default function ShareQrModal({ open, onClose, type, label, params, clientId, variant = 'modal' }: Props) {
   const [shareToken, setShareToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
   const shareUrl = shareToken ? `${typeof window !== 'undefined' ? window.location.origin : ''}/share/${shareToken}` : '';
 
   useEffect(() => {
-    if (!open) { setShareToken(null); return; }
+    if (!open) { setShareToken(null); setError(false); return; }
     setLoading(true);
+    setError(false);
     api.post('/shares', { type, label, params, clientId })
-      .then(r => setShareToken(r.data.accessToken))
-      .catch(() => {/* silencioso */})
+      .then(r => setShareToken(r.data.accessToken ?? null))
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -119,7 +121,14 @@ export default function ShareQrModal({ open, onClose, type, label, params, clien
         </div>
       )}
 
-      {!loading && shareToken && (
+      {!loading && error && (
+        <div className="flex flex-col items-center py-8 gap-2 text-center">
+          <p className="text-sm font-medium text-red-600">Não foi possível gerar o link.</p>
+          <p className="text-xs text-gray-400">Verifica se estás autenticado e tenta novamente.</p>
+        </div>
+      )}
+
+      {!loading && !error && shareToken && (
         <>
           <div ref={qrRef} className="flex justify-center p-4 bg-white border border-gray-200 rounded-xl">
             <QRCode value={shareUrl} size={180} />
