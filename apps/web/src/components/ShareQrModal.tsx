@@ -33,18 +33,18 @@ const TYPE_LABELS: Record<ShareReportType, string> = {
 };
 
 export default function ShareQrModal({ open, onClose, type, label, params, clientId, variant = 'modal' }: Props) {
-  const [shareId, setShareId] = useState<string | null>(null);
+  const [shareToken, setShareToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
-  const shareUrl = shareId ? `${typeof window !== 'undefined' ? window.location.origin : ''}/share/${shareId}` : '';
+  const shareUrl = shareToken ? `${typeof window !== 'undefined' ? window.location.origin : ''}/share/${shareToken}` : '';
 
   useEffect(() => {
-    if (!open) { setShareId(null); return; }
+    if (!open) { setShareToken(null); return; }
     setLoading(true);
     api.post('/shares', { type, label, params, clientId })
-      .then(r => setShareId(r.data.id))
+      .then(r => setShareToken(r.data.accessToken))
       .catch(() => {/* silencioso */})
       .finally(() => setLoading(false));
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -119,7 +119,7 @@ export default function ShareQrModal({ open, onClose, type, label, params, clien
         </div>
       )}
 
-      {!loading && shareId && (
+      {!loading && shareToken && (
         <>
           <div ref={qrRef} className="flex justify-center p-4 bg-white border border-gray-200 rounded-xl">
             <QRCode value={shareUrl} size={180} />

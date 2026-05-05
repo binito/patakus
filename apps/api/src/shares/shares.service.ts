@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ReportType } from '@prisma/client';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../common/types/auth-user.type';
 import { CreateShareDto } from './dto/create-share.dto';
@@ -9,9 +10,10 @@ export class SharesService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateShareDto, actor: AuthUser) {
-    // Para SUPER_ADMIN sem clientId próprio, usa o clientId do DTO se fornecido;
-    // se mesmo assim vazio, guarda '' e fetchData tratará como "todos os clientes".
     const clientId = dto.clientId ?? actor.clientId ?? '';
+    const accessToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
     return this.prisma.reportShare.create({
       data: {
         type: dto.type,
@@ -19,14 +21,21 @@ export class SharesService {
         params: dto.params as any,
         clientId,
         createdById: actor.id,
+        accessToken,
+        expiresAt,
       },
-      select: { id: true, type: true, label: true, createdAt: true },
+      select: { id: true, accessToken: true, type: true, label: true, createdAt: true, expiresAt: true },
     });
   }
 
-  async getPublicShare(id: string) {
-    const share = await this.prisma.reportShare.findUnique({ where: { id } });
+  async getPublicShare(token: string) {
+    // Suporta token aleatório (novo) e id UUID (shares antigas sem token)
+    const share = token.length === 64
+      ? await this.prisma.reportShare.findUnique({ where: { accessToken: token } })
+      : await this.prisma.reportShare.findUnique({ where: { id: token } });
+
     if (!share) throw new NotFoundException('Partilha não encontrada');
+    if (share.expiresAt && share.expiresAt < new Date()) throw new ForbiddenException('Partilha expirada');
 
     const [client, data] = await Promise.all([
       share.clientId

@@ -544,6 +544,8 @@ model ReportShare {
   params      Json
   clientId    String
   createdById String
+  accessToken String?    @unique
+  expiresAt   DateTime?
   createdAt   DateTime   @default(now())
 
   @@index([clientId])
