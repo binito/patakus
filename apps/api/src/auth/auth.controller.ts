@@ -48,7 +48,7 @@ function clearCookies(res: Response) {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @UseGuards(ThrottlerGuard)
   @Post('login')
   @HttpCode(200)
@@ -60,6 +60,8 @@ export class AuthController {
     return { access_token, user };
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('refresh')
   @HttpCode(200)
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
