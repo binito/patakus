@@ -303,6 +303,7 @@ export default function TemperaturePage() {
   const nonConform = records.filter(r => !tempOk(r.temperature, r.equipment.minTemp, r.equipment.maxTemp));
   const total = equipmentToday.length;
   const complete = equipmentToday.filter(e => e.today.morning && e.today.evening).length;
+  const incomplete = equipmentToday.filter(e => !e.today.morning || !e.today.evening);
 
   return (
     <div className="space-y-6">
@@ -317,6 +318,35 @@ export default function TemperaturePage() {
           </Button>
         )}
       </div>
+
+      {/* Banner — leituras em falta */}
+      {incomplete.length > 0 && !todayLoading && (
+        <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-orange-500" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-orange-800">
+                {incomplete.length === 1
+                  ? '1 equipamento sem leitura completa hoje'
+                  : `${incomplete.length} equipamentos sem leitura completa hoje`}
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {incomplete.map(eq => (
+                  <li key={eq.id} className="text-sm text-orange-700">
+                    <span className="font-medium">{eq.name}</span>
+                    {' — '}
+                    {!eq.today.morning && !eq.today.evening
+                      ? 'sem leituras'
+                      : !eq.today.morning
+                      ? 'falta manhã'
+                      : 'falta tarde'}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200">

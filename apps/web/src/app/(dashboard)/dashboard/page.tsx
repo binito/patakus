@@ -1,11 +1,11 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, MapPin, ShoppingCart, ClipboardList, Package } from 'lucide-react';
+import { AlertTriangle, MapPin, ShoppingCart, ClipboardList, Package, Thermometer } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
-import { Anomaly, Order } from '@/types';
+import { Anomaly, Order, zonaLabel } from '@/types';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import Link from 'next/link';
@@ -67,12 +67,45 @@ export default function DashboardPage() {
     queryFn: () => api.get('/consumables/reports').then(r => r.data.filter((r: ShortageReport) => r.status === 'OPEN')),
   });
 
+  interface EquipmentWithToday {
+    id: string; name: string;
+    today: { morning: unknown; evening: unknown };
+  }
+  const { data: equipmentToday = [] } = useQuery<EquipmentWithToday[]>({
+    queryKey: ['temperature-today', user?.clientId],
+    queryFn: () => api.get('/temperature/today').then(r => r.data),
+    refetchInterval: 60_000,
+    enabled: !isSuperAdmin,
+  });
+  const tempIncomplete = equipmentToday.filter(e => !e.today.morning || !e.today.evening);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Painel</h1>
         <p className="text-sm text-gray-500">Visão geral das operações</p>
       </div>
+
+      {/* Banner — temperaturas em falta */}
+      {tempIncomplete.length > 0 && (
+        <Link href="/registos/temperaturas">
+          <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 hover:bg-orange-100 transition-colors cursor-pointer">
+            <div className="flex items-start gap-3">
+              <Thermometer className="mt-0.5 h-5 w-5 shrink-0 text-orange-500" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-orange-800">
+                  {tempIncomplete.length === 1
+                    ? '1 equipamento sem leitura completa hoje'
+                    : `${tempIncomplete.length} equipamentos sem leitura completa hoje`}
+                </p>
+                <p className="text-xs text-orange-600 mt-0.5">
+                  {tempIncomplete.map(e => e.name).join(', ')} — clica para registar
+                </p>
+              </div>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* Stat cards */}
       {statsLoading ? (
@@ -166,7 +199,7 @@ export default function DashboardPage() {
                 <li key={anomaly.id} className="flex items-center justify-between py-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{anomaly.title}</p>
-                    <p className="text-xs text-gray-500">{anomaly.area?.name ?? '—'}</p>
+                    <p className="text-xs text-gray-500">{anomaly.zona ? zonaLabel[anomaly.zona] : '—'}</p>
                   </div>
                   <Badge status={anomaly.severity} />
                 </li>

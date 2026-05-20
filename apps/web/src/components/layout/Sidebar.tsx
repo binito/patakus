@@ -21,6 +21,7 @@ import {
   FlaskConical,
   Flame,
   BookOpen,
+  FileText,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuthStore } from '@/store/auth.store';
@@ -71,6 +72,7 @@ const navEntries: NavEntry[] = [
     ],
   },
   { href: '/products', label: 'Produtos', icon: Box, roles: ['SUPER_ADMIN'] },
+  { href: '/fichas-tecnicas', label: 'Fichas Técnicas', icon: FileText },
 ];
 
 export function Sidebar() {

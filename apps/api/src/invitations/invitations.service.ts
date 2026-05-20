@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
@@ -18,17 +18,24 @@ export class InvitationsService {
   ) {}
 
   async create(dto: CreateInvitationDto, actor: AuthUser) {
+    if (actor.role === Role.CLIENT_ADMIN) {
+      if (dto.clientId !== actor.clientId) throw new ForbiddenException('Só pode convidar para o seu próprio cliente');
+      if (dto.role && dto.role !== Role.OPERATOR) throw new ForbiddenException('Só pode convidar utilizadores do tipo Operacional');
+    }
+
     const client = await this.prisma.client.findUnique({ where: { id: dto.clientId } });
     if (!client) throw new NotFoundException('Cliente não encontrado');
 
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + EXPIRES_DAYS * 24 * 60 * 60 * 1000);
 
+    const role = actor.role === Role.CLIENT_ADMIN ? Role.OPERATOR : (dto.role ?? Role.CLIENT_ADMIN);
+
     const invitation = await this.prisma.invitation.create({
       data: {
         token,
         email: dto.email,
-        role: dto.role ?? Role.CLIENT_ADMIN,
+        role,
         clientId: dto.clientId,
         expiresAt,
         createdById: actor.id,
@@ -46,16 +53,22 @@ export class InvitationsService {
     };
   }
 
-  async findByClient(clientId: string) {
+  async findByClient(clientId: string, actor: AuthUser) {
+    if (actor.role === Role.CLIENT_ADMIN && clientId !== actor.clientId) {
+      throw new ForbiddenException('Sem permissão para ver convites de outro cliente');
+    }
     return this.prisma.invitation.findMany({
       where: { clientId, used: false, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async revoke(id: string) {
+  async revoke(id: string, actor: AuthUser) {
     const inv = await this.prisma.invitation.findUnique({ where: { id } });
     if (!inv) throw new NotFoundException('Convite não encontrado');
+    if (actor.role === Role.CLIENT_ADMIN && inv.clientId !== actor.clientId) {
+      throw new ForbiddenException('Sem permissão para revogar este convite');
+    }
     await this.prisma.invitation.delete({ where: { id } });
     return { id };
   }

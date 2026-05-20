@@ -69,14 +69,23 @@ export interface AnomalyPhoto {
   filename: string;
 }
 
+export type HigienizacaoZona = 'COZINHA' | 'PRODUCAO' | 'ARMAZEM' | 'SERVICO';
+
+export const zonaLabel: Record<HigienizacaoZona, string> = {
+  COZINHA: 'Cozinha',
+  PRODUCAO: 'Produção',
+  ARMAZEM: 'Armazém',
+  SERVICO: 'Serviço',
+};
+
 export interface AnomalyReport {
   id: string;
   title: string;
   description: string;
   status: AnomalyStatus;
   severity: AnomalySeverity;
-  areaId: string;
-  area?: Area;
+  zona: HigienizacaoZona;
+  clientId: string;
   reporterId: string;
   reporter?: User;
   photos?: AnomalyPhoto[];
@@ -94,6 +103,8 @@ export interface Product {
   category?: string;
   price?: number;
   active: boolean;
+  technicalSheetUrl?: string;
+  technicalSheetName?: string;
 }
 
 export interface ConsumableStock {

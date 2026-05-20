@@ -16,24 +16,24 @@ export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Post()
   create(@Body() dto: CreateInvitationDto, @CurrentUser() user: AuthUser) {
     return this.invitationsService.create(dto, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Get()
-  findByClient(@Query('clientId') clientId: string) {
-    return this.invitationsService.findByClient(clientId);
+  findByClient(@Query('clientId') clientId: string, @CurrentUser() user: AuthUser) {
+    return this.invitationsService.findByClient(clientId, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.CLIENT_ADMIN)
   @Delete(':id')
-  revoke(@Param('id') id: string) {
-    return this.invitationsService.revoke(id);
+  revoke(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.invitationsService.revoke(id, user);
   }
 
   // Rotas públicas (sem auth)
@@ -42,7 +42,7 @@ export class InvitationsController {
     return this.invitationsService.validate(token);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(ThrottlerGuard)
   @Post(':token/accept')
   async accept(

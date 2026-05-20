@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 
@@ -54,6 +56,46 @@ export class ProductsService {
   async update(id: string, data: Partial<CreateProductDto>) {
     await this.findOne(id);
     const result = await this.prisma.product.update({ where: { id }, data });
+    await this.cache.del(PRODUCTS_CACHE_KEY);
+    return result;
+  }
+
+  async setFichaTecnica(id: string, filename: string, originalname: string) {
+    const product = await this.findOne(id);
+    // Remove ficheiro antigo se existir
+    if (product.technicalSheetUrl) {
+      const oldFile = product.technicalSheetUrl.replace('/uploads/', '');
+      try {
+        await unlink(join(process.env.UPLOAD_DIR ?? './uploads', oldFile));
+      } catch {
+        // ignora se não existir
+      }
+    }
+    const result = await this.prisma.product.update({
+      where: { id },
+      data: {
+        technicalSheetUrl: `/uploads/${filename}`,
+        technicalSheetName: originalname,
+      },
+    });
+    await this.cache.del(PRODUCTS_CACHE_KEY);
+    return result;
+  }
+
+  async removeFichaTecnica(id: string) {
+    const product = await this.findOne(id);
+    if (product.technicalSheetUrl) {
+      const filename = product.technicalSheetUrl.replace('/uploads/', '');
+      try {
+        await unlink(join(process.env.UPLOAD_DIR ?? './uploads', filename));
+      } catch {
+        // ignora se não existir
+      }
+    }
+    const result = await this.prisma.product.update({
+      where: { id },
+      data: { technicalSheetUrl: null, technicalSheetName: null },
+    });
     await this.cache.del(PRODUCTS_CACHE_KEY);
     return result;
   }

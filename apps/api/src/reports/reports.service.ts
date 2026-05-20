@@ -17,18 +17,16 @@ export class ReportsService {
       await validateFileMagicBytes(files);
     }
 
-    if (actor.role !== Role.SUPER_ADMIN) {
-      const area = await this.prisma.area.findUnique({ where: { id: dto.areaId }, select: { clientId: true } });
-      if (!area) throw new NotFoundException('Área não encontrada');
-      assertOwnership(actor, area.clientId);
-    }
+    if (actor.role === Role.SUPER_ADMIN) throw new ForbiddenException('SUPER_ADMIN não pode criar anomalias');
+    if (!actor.clientId) throw new ForbiddenException('Utilizador sem cliente associado');
 
     return this.prisma.anomalyReport.create({
       data: {
         title: dto.title,
         description: dto.description,
         severity: dto.severity,
-        areaId: dto.areaId,
+        zona: dto.zona,
+        clientId: actor.clientId,
         reporterId,
         photos: {
           create: files.map((f) => ({
@@ -37,26 +35,23 @@ export class ReportsService {
           })),
         },
       },
-      include: { photos: true, area: true },
+      include: { photos: true },
     });
   }
 
   async findAll(
     clientId?: string,
-    areaId?: string,
     status?: AnomalyStatus,
     pagination: CursorPaginationDto = {},
   ): Promise<PaginatedResult<any>> {
     const take = pagination.take ?? 50;
     const items = await this.prisma.anomalyReport.findMany({
       where: {
-        ...(areaId ? { areaId } : {}),
-        ...(clientId ? { area: { clientId } } : {}),
+        ...(clientId ? { clientId } : {}),
         ...(status ? { status } : {}),
       },
       include: {
         photos: true,
-        area: { select: { name: true, clientId: true } },
         reporter: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -70,10 +65,10 @@ export class ReportsService {
   async findOne(id: string, actor: AuthUser) {
     const report = await this.prisma.anomalyReport.findUnique({
       where: { id },
-      include: { photos: true, area: true, reporter: { select: { name: true } } },
+      include: { photos: true, reporter: { select: { name: true } } },
     });
     if (!report) throw new NotFoundException('Relatório não encontrado');
-    assertOwnership(actor, report.area.clientId);
+    assertOwnership(actor, report.clientId);
     return report;
   }
 

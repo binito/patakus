@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Thermometer, CheckCircle2, Clock, Plus, List, QrCode } from 'lucide-react';
+import { Thermometer, CheckCircle2, Clock, Plus, List, QrCode, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
@@ -157,6 +157,7 @@ export default function TemperaturasPage() {
   const total = equipment.length;
   const complete = equipment.filter(e => e.today.morning && e.today.evening).length;
   const pending = total - complete;
+  const incomplete = equipment.filter(e => !e.today.morning || !e.today.evening);
 
   return (
     <>
@@ -208,6 +209,29 @@ export default function TemperaturasPage() {
       )}
 
       {tab === 'today' && (<div className="p-4 space-y-4">
+        {/* Banner — leituras em falta */}
+        {incomplete.length > 0 && !isLoading && (
+          <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle size={18} className="mt-0.5 shrink-0 text-orange-500" />
+              <div>
+                <p className="text-sm font-semibold text-orange-800">
+                  {incomplete.length === 1 ? '1 equipamento' : `${incomplete.length} equipamentos`} sem leitura completa
+                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {incomplete.map(eq => (
+                    <li key={eq.id} className="text-xs text-orange-700">
+                      <span className="font-medium">{eq.name}</span>
+                      {' — '}
+                      {!eq.today.morning && !eq.today.evening ? 'sem leituras' : !eq.today.morning ? 'falta manhã' : 'falta tarde'}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Resumo */}
         {total > 0 && (
           <div className={`rounded-xl p-4 ${pending === 0 ? 'bg-green-600' : 'bg-blue-600'} text-white`}>

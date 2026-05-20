@@ -31,7 +31,7 @@ import { InvitationsModule } from './invitations/invitations.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.register({ isGlobal: true, ttl: 60000, max: 500 }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({

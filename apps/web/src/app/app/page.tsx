@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ClipboardList, AlertTriangle, Package, ChevronRight } from 'lucide-react';
+import { ClipboardList, AlertTriangle, Package, ChevronRight, Thermometer } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/lib/api';
 
@@ -20,6 +20,13 @@ export default function AppHomePage() {
     queryFn: () => api.get('/reports/anomalies?status=OPEN').then(r => r.data.data),
   });
 
+  const { data: equipmentToday = [] } = useQuery<{ id: string; name: string; today: { morning: unknown; evening: unknown } }[]>({
+    queryKey: ['temperature-today', user?.clientId],
+    queryFn: () => api.get('/temperature/today').then(r => r.data),
+    refetchInterval: 60_000,
+  });
+  const tempIncomplete = equipmentToday.filter(e => !e.today.morning || !e.today.evening);
+
   const greeting = () => {
     const h = new Date().getHours();
     if (h < 12) return 'Bom dia';
@@ -34,6 +41,22 @@ export default function AppHomePage() {
         <p className="text-xl font-bold text-gray-800">{user?.name?.split(' ')[0]}</p>
         <p className="text-xs text-gray-400 mt-1">{new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </div>
+
+      {tempIncomplete.length > 0 && (
+        <Link href="/app/temperaturas">
+          <div className="flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 active:bg-orange-100">
+            <Thermometer size={18} className="mt-0.5 shrink-0 text-orange-500" />
+            <div>
+              <p className="text-sm font-semibold text-orange-800">
+                {tempIncomplete.length === 1 ? '1 equipamento' : `${tempIncomplete.length} equipamentos`} sem leitura completa
+              </p>
+              <p className="text-xs text-orange-600 mt-0.5">
+                {tempIncomplete.map(e => e.name).join(', ')}
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
 
       <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Acesso rápido</h2>
 

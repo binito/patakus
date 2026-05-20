@@ -68,14 +68,12 @@ export class ReportsController {
   @Get('anomalies')
   findAll(
     @TenantId() clientId: string,
-    @Query('areaId') areaId: string,
     @Query('status') status: string,
     @Query() pagination: CursorPaginationDto,
     @CurrentUser() user: AuthUser,
   ) {
     return this.reportsService.findAll(
       user.role === Role.SUPER_ADMIN ? (clientId || undefined) : clientId,
-      areaId,
       status as AnomalyStatus,
       pagination,
     );

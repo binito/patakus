@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { UserCircle, Plus, Pencil, ShieldCheck, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { UserCircle, Plus, Pencil, ShieldCheck, Eye, EyeOff, Trash2, UserPlus, Copy, Check, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Card } from '@/components/ui/Card';
@@ -12,6 +12,13 @@ import { Modal } from '@/components/ui/Modal';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/lib/api';
 import { User, Client } from '@/types';
+
+interface Invitation {
+  id: string;
+  email: string | null;
+  createdAt: string;
+  expiresAt: string;
+}
 
 interface UserForm {
   name: string;
@@ -31,6 +38,9 @@ export default function UsersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [showPass, setShowPass] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ['users'],
@@ -81,6 +91,40 @@ export default function UsersPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); toast.success('Utilizador eliminado'); },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao eliminar'),
   });
+
+  const { data: pendingInvites = [] } = useQuery<Invitation[]>({
+    queryKey: ['invitations', me?.clientId],
+    queryFn: () => api.get(`/invitations?clientId=${me!.clientId}`).then(r => r.data),
+    enabled: me?.role === 'CLIENT_ADMIN' && !!me?.clientId,
+  });
+
+  const createInviteMutation = useMutation({
+    mutationFn: () => api.post('/invitations', {
+      clientId: me!.clientId,
+      email: inviteEmail || undefined,
+    }).then(r => r.data),
+    onSuccess: (data) => {
+      setGeneratedLink(data.link);
+      qc.invalidateQueries({ queryKey: ['invitations', me?.clientId] });
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao gerar convite'),
+  });
+
+  const revokeInviteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/invitations/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['invitations', me?.clientId] });
+      toast.success('Convite revogado');
+    },
+  });
+
+  function copyLink() {
+    if (!generatedLink) return;
+    navigator.clipboard.writeText(generatedLink);
+    setCopied(true);
+    toast.success('Link copiado!');
+    setTimeout(() => setCopied(false), 3000);
+  }
 
   function openNew() {
     setEditing(null);
@@ -172,6 +216,59 @@ export default function UsersPage() {
           </ul>
         )}
       </Card>
+
+      {me?.role === 'CLIENT_ADMIN' && (
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-blue-500" /> Convidar Operacional por Link
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">Gera um link de convite para um novo operacional se registar</p>
+            </div>
+          </div>
+          <div className="flex gap-2 mb-4">
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={e => setInviteEmail(e.target.value)}
+              placeholder="Email do convidado (opcional)"
+              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <Button onClick={() => { setGeneratedLink(null); createInviteMutation.mutate(); }} loading={createInviteMutation.isPending}>
+              Gerar Convite
+            </Button>
+          </div>
+          {generatedLink && (
+            <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 mb-4">
+              <span className="flex-1 text-xs text-blue-700 truncate font-mono">{generatedLink}</span>
+              <button onClick={copyLink} className="shrink-0 text-blue-600 hover:text-blue-800">
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
+          )}
+          {pendingInvites.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-2">Convites pendentes</p>
+              <ul className="space-y-1">
+                {pendingInvites.map(inv => (
+                  <li key={inv.id} className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm">
+                    <span className="text-gray-700">{inv.email ?? 'Sem email'}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-400">
+                        Expira {new Date(inv.expiresAt).toLocaleDateString('pt-PT')}
+                      </span>
+                      <button onClick={() => revokeInviteMutation.mutate(inv.id)} className="text-gray-300 hover:text-red-500" title="Revogar">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Card>
+      )}
 
       <Modal open={modalOpen} onClose={closeModal} title={editing ? 'Editar Utilizador' : 'Novo Utilizador'}>
         <form onSubmit={handleSubmit(d => saveMutation.mutate(d))} className="space-y-4">

@@ -6,7 +6,7 @@ import { AlertTriangle, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
-import { Anomaly, AnomalyStatus } from '@/types';
+import { Anomaly, AnomalyStatus, zonaLabel } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -117,7 +117,7 @@ export default function AnomaliesPage() {
                           </p>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-gray-500">{anomaly.area?.name ?? anomaly.areaId}</td>
+                      <td className="px-6 py-4 text-gray-500">{anomaly.zona ? zonaLabel[anomaly.zona] : '—'}</td>
                       <td className="px-6 py-4">
                         <Badge status={anomaly.severity} />
                       </td>

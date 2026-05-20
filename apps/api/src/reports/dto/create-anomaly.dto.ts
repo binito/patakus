@@ -4,7 +4,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { AnomalySeverity } from '@prisma/client';
+import { AnomalySeverity, HigienizacaoZona } from '@prisma/client';
 
 export class CreateAnomalyDto {
   @IsString()
@@ -19,7 +19,7 @@ export class CreateAnomalyDto {
   @IsOptional()
   severity?: AnomalySeverity;
 
-  @IsString()
+  @IsEnum(HigienizacaoZona)
   @IsNotEmpty()
-  areaId: string;
+  zona: HigienizacaoZona;
 }

@@ -28,7 +28,7 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  client       Client?  @relation(fields: [clientId], references: [id])
+  client       Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId     String?
 
   checklistEntries ChecklistEntry[]
@@ -82,6 +82,8 @@ model Client {
   higienizacaoRecords HigienizacaoRecord[]
   desinfecaoRecords DesinfecaoRecord[]
   oleoFrituraRecords OleoFrituraRecord[]
+  anomalyReports   AnomalyReport[]
+  higienizacaoZonaConfigs HigienizacaoZonaConfig[]
 
   @@map("clients")
 }
@@ -98,7 +100,7 @@ model Area {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
 
-  client       Client   @relation(fields: [clientId], references: [id])
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId     String
 
   checklistTemplates ChecklistTemplate[]
@@ -136,7 +138,7 @@ model ChecklistTemplate {
   isDefault    Boolean   @default(false)
   createdAt    DateTime  @default(now())
 
-  area         Area      @relation(fields: [areaId], references: [id])
+  area         Area      @relation(fields: [areaId], references: [id], onDelete: Cascade)
   areaId       String
 
   tasks        ChecklistTask[]
@@ -150,7 +152,7 @@ model ChecklistTask {
   description  String
   order        Int      @default(0)
 
-  template     ChecklistTemplate @relation(fields: [templateId], references: [id])
+  template     ChecklistTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   templateId   String
 
   taskResults  ChecklistTaskResult[]
@@ -163,10 +165,10 @@ model ChecklistEntry {
   completedAt  DateTime @default(now())
   notes        String?
 
-  template     ChecklistTemplate @relation(fields: [templateId], references: [id])
+  template     ChecklistTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   templateId   String
 
-  area         Area     @relation(fields: [areaId], references: [id])
+  area         Area      @relation(fields: [areaId], references: [id], onDelete: Cascade)
   areaId       String
 
   operator     User     @relation(fields: [operatorId], references: [id])
@@ -183,7 +185,7 @@ model ChecklistTaskResult {
   done         Boolean  @default(false)
   notes        String?
 
-  entry        ChecklistEntry @relation(fields: [entryId], references: [id])
+  entry        ChecklistEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
   entryId      String
 
   task         ChecklistTask  @relation(fields: [taskId], references: [id])
@@ -209,18 +211,23 @@ enum AnomalySeverity {
 }
 
 model AnomalyReport {
-  id           String          @id @default(uuid())
+  id           String           @id @default(uuid())
   title        String
-  description  String          @db.Text
-  status       AnomalyStatus   @default(OPEN)
-  severity     AnomalySeverity @default(MEDIUM)
+  description  String           @db.Text
+  status       AnomalyStatus    @default(OPEN)
+  severity     AnomalySeverity  @default(MEDIUM)
   resolvedAt   DateTime?
   resolvedNote String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
-  area         Area   @relation(fields: [areaId], references: [id])
-  areaId       String
+  zona         HigienizacaoZona?
+
+  area         Area?     @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  areaId       String?
+
+  client       Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId     String
 
   reporter     User   @relation(fields: [reporterId], references: [id])
   reporterId   String
@@ -228,7 +235,7 @@ model AnomalyReport {
   photos       AnomalyPhoto[]
 
   @@index([status])
-  @@index([areaId, createdAt])
+  @@index([clientId, createdAt])
   @@map("anomaly_reports")
 }
 
@@ -238,7 +245,7 @@ model AnomalyPhoto {
   filename     String
   createdAt    DateTime @default(now())
 
-  report       AnomalyReport @relation(fields: [reportId], references: [id])
+  report       AnomalyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
   reportId     String
 
   @@map("anomaly_photos")
@@ -268,7 +275,7 @@ model TemperatureEquipment {
   active    Boolean       @default(true)
   createdAt DateTime      @default(now())
 
-  client    Client        @relation(fields: [clientId], references: [id])
+  client    Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId  String
 
   records   TemperatureRecord[]
@@ -284,7 +291,7 @@ model TemperatureRecord {
   notes       String?
   recordedAt  DateTime     @default(now())
 
-  equipment   TemperatureEquipment @relation(fields: [equipmentId], references: [id])
+  equipment   TemperatureEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
   equipmentId String
 
   operator    User         @relation(fields: [operatorId], references: [id])
@@ -299,15 +306,17 @@ model TemperatureRecord {
 // ─────────────────────────────────────────────
 
 model Product {
-  id           String   @id @default(uuid())
-  name         String
-  sku          String?  @unique
-  description  String?
-  unit         String   @default("un")   // un, L, kg, etc.
-  category     String?
-  price        Float?
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
+  id                  String   @id @default(uuid())
+  name                String
+  sku                 String?  @unique
+  description         String?
+  unit                String   @default("un")   // un, L, kg, etc.
+  category            String?
+  price               Float?
+  active              Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  technicalSheetUrl   String?
+  technicalSheetName  String?
 
   stocks       ConsumableStock[]
   orderItems   OrderItem[]
@@ -322,7 +331,7 @@ model ConsumableStock {
   minQuantity  Float    @default(0)     // alerta quando abaixo deste valor
   updatedAt    DateTime @updatedAt
 
-  client       Client   @relation(fields: [clientId], references: [id])
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId     String
 
   product      Product  @relation(fields: [productId], references: [id])
@@ -353,7 +362,7 @@ model ConsumableReport {
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
-  stock        ConsumableStock  @relation(fields: [stockId], references: [id])
+  stock        ConsumableStock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
   stockId      String
 
   reporter     User             @relation(fields: [reporterId], references: [id])
@@ -403,7 +412,7 @@ model Order {
   updatedAt    DateTime    @updatedAt
   deliveredAt  DateTime?
 
-  client       Client      @relation(fields: [clientId], references: [id])
+  client       Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId     String
 
   items        OrderItem[]
@@ -418,7 +427,7 @@ model OrderItem {
   unitPrice    Float?
   notes        String?
 
-  order        Order   @relation(fields: [orderId], references: [id])
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId      String
 
   product      Product @relation(fields: [productId], references: [id])
@@ -446,7 +455,7 @@ model EntradaRecord {
   observacoes  String?
   createdAt    DateTime @default(now())
 
-  client       Client   @relation(fields: [clientId], references: [id])
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId     String
 
   operator     User     @relation(fields: [operatorId], references: [id])
@@ -475,7 +484,7 @@ model HigienizacaoRecord {
   observacoes String?
   createdAt   DateTime         @default(now())
 
-  client      Client           @relation(fields: [clientId], references: [id])
+  client      Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId    String
 
   operator    User             @relation(fields: [operatorId], references: [id])
@@ -483,6 +492,18 @@ model HigienizacaoRecord {
 
   @@index([clientId, dia])
   @@map("higienizacao_records")
+}
+
+model HigienizacaoZonaConfig {
+  id       String           @id @default(uuid())
+  zona     HigienizacaoZona
+  itens    Json             // [{key: string, label: string, period: 'D'|'S'|'T'}]
+
+  client   Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  @@unique([clientId, zona])
+  @@map("higienizacao_zona_config")
 }
 
 // ─────────────────────────────────────────────
@@ -500,7 +521,7 @@ model DesinfecaoRecord {
   observacoes         String?
   createdAt           DateTime @default(now())
 
-  client              Client   @relation(fields: [clientId], references: [id])
+  client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId            String
 
   operator            User     @relation(fields: [operatorId], references: [id])
@@ -523,7 +544,7 @@ model OleoFrituraRecord {
   acoes        String?
   createdAt    DateTime @default(now())
 
-  client       Client   @relation(fields: [clientId], references: [id])
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId     String
 
   responsavel  User     @relation(fields: [responsavelId], references: [id])
