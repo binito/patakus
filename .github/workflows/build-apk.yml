@@ -1,0 +1,87 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'twa/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install build tools
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Restore keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > twa/android.keystore
+
+      - name: Make gradlew executable
+        run: chmod +x twa/gradlew
+
+      - name: Build release APK
+        working-directory: twa
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        run: ./gradlew assembleRelease
+
+      - name: Sign APK
+        working-directory: twa
+        run: |
+          $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
+            --ks android.keystore \
+            --ks-key-alias ${{ secrets.ANDROID_KEY_ALIAS }} \
+            --ks-pass pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.ANDROID_KEY_PASSWORD }} \
+            --out app-release-signed.apk \
+            app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: patakus-apk
+          path: twa/app-release-signed.apk
+          retention-days: 30
+
+      - name: Generate assetlinks.json
+        working-directory: twa
+        run: |
+          FINGERPRINT=$(keytool -list -v \
+            -keystore android.keystore \
+            -alias ${{ secrets.ANDROID_KEY_ALIAS }} \
+            -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }} 2>&1 | grep "SHA256:" | sed 's/.*SHA256: //')
+          cat > assetlinks.json << EOF
+          [{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+              "namespace": "android_app",
+              "package_name": "pt.cafemartins.patakus",
+              "sha256_cert_fingerprints": ["$FINGERPRINT"]
+            }
+          }]
+          EOF
+          echo "Fingerprint: $FINGERPRINT"
+          cat assetlinks.json
+
+      - name: Upload assetlinks.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: assetlinks
+          path: twa/assetlinks.json
+          retention-days: 30
