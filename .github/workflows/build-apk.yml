@@ -35,11 +35,11 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x twa/gradlew
 
-      - name: Build release APK
+      - name: Build release APK and AAB
         working-directory: twa
         env:
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease bundleRelease
 
       - name: Sign APK
         working-directory: twa
@@ -52,11 +52,28 @@ jobs:
             --out app-release-signed.apk \
             app/build/outputs/apk/release/app-release-unsigned.apk
 
+      - name: Sign AAB
+        working-directory: twa
+        run: |
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore android.keystore \
+            -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.ANDROID_KEY_PASSWORD }} \
+            app/build/outputs/bundle/release/app-release.aab \
+            ${{ secrets.ANDROID_KEY_ALIAS }}
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: patakus-apk
           path: twa/app-release-signed.apk
+          retention-days: 30
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: patakus-aab
+          path: twa/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
 
       - name: Generate assetlinks.json
