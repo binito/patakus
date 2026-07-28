@@ -497,6 +497,78 @@ async login(@Body() dto: LoginDto) {
 
 ---
 
+## 🖥️ Infraestrutura — nginx
+
+O nginx no Raspberry Pi (`192.168.1.176`) é o único componente exposto
+directamente à Internet em `patakus.cafemartins.pt`, a fazer reverse proxy
+para `localhost:3000` (web) e `localhost:3001` (api). Está fora do âmbito do
+OWASP Top 10 aplicacional, mas dentro do perímetro de risco.
+
+### CVE-2026-42533 — heap buffer overflow com `map` + regex
+
+| | |
+|---|---|
+| **Severidade** | Alto (CVSS 3.1 = 8.1) |
+| **Versões afectadas** | nginx 0.9.6 → 1.31.2 (bug introduzido em Março 2011) |
+| **Corrigido em** | 1.30.4 (stable), 1.31.3 (mainline) — 15 Jul 2026 |
+| **Impacto** | Crash do worker process (DoS); RCE possível apenas se o ASLR estiver desactivado ou for contornável |
+
+**Condição de exploração** — não basta ter nginx a correr. Segundo o advisory
+da F5, o overflow ocorre quando a config usa a directiva `map` **com regex
+matching** e a variável de saída desse map é incluída numa string expression
+**a seguir a uma captura afectada por esse mesmo map**. Um
+`map $http_upgrade $connection_upgrade` normal (matching exacto, sem regex)
+**não** cumpre a condição.
+
+**Verificação:**
+
+```bash
+sudo ./scripts/check-nginx-cve.sh
+```
+
+O script é read-only e reporta três estados (`OK` / `ATENÇÃO` / `VULNERÁVEL`),
+cruzando a versão do nginx com um scan da config efectiva (`nginx -T`).
+
+⚠️ **Cuidado com falsos positivos de versão:** Debian e Raspberry Pi OS aplicam
+correcções de segurança por *backport*, sem subir o número de versão upstream.
+Um `nginx -v` a devolver `1.22.1` **não** prova que o fix está em falta —
+confirmar com `apt-get changelog nginx` ou simplesmente actualizar.
+
+**Remediação:**
+
+```bash
+sudo apt update
+sudo apt install --only-upgrade nginx
+sudo nginx -t
+sudo systemctl reload nginx     # reload, não restart — não corta ligações activas
+```
+
+**Mitigação temporária** (se o upgrade não estiver disponível): substituir as
+capturas posicionais `$1..$9` por **capturas nomeadas** nos regex dos blocos `map`:
+
+```nginx
+map $uri $destino {
+    ~^/antigo/(?<resto>.*)$   /novo/$resto;   # em vez de  /novo/$1
+}
+```
+
+### 🟡 Dívida técnica: config do nginx não está versionada
+
+A config vive apenas em `/etc/nginx/` no Pi e não existe cópia no repositório.
+Consequências: não é auditável em code review, não entra em backup com o resto
+do projecto, e não é reproduzível se o Pi falhar.
+
+**Recomendação:** copiar `/etc/nginx/sites-available/patakus` para
+`deploy/nginx/patakus.conf` e passar a manter a partir daí (sem segredos —
+os caminhos dos certificados são referências, não chaves).
+
+**Referências:**
+- https://nginx.org/en/security_advisories.html
+- https://my.f5.com/manage/s/article/K000162097
+- https://nvd.nist.gov/vuln/detail/CVE-2026-42533
+
+---
+
 ## Contactos para Dúvidas
 
 - **Segurança:** Contactar Equipa Segurança
