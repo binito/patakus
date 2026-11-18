@@ -24,7 +24,8 @@ interface Invitation {
   id: string; email: string | null; createdAt: string; expiresAt: string;
 }
 
-const SECTORS = ['Hotel', 'Restaurante', 'Café', 'Clínica', 'Farmácia', 'Escritório', 'Indústria', 'Outro'];
+const SECTORS = ['Hotel', 'Restaurante', 'Café', 'Clínica', 'Farmácia', 'Escritório', 'Indústria'];
+const CUSTOM_SECTOR_VALUE = '__custom__';
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -53,7 +54,8 @@ export default function ClientsPage() {
     enabled: !!inviteClient,
   });
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ClientForm>();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ClientForm & { customSector?: string }>();
+  const selectedSector = watch('sector');
 
   const saveMutation = useMutation({
     mutationFn: (data: ClientForm) =>
@@ -94,17 +96,32 @@ export default function ClientsPage() {
     },
   });
 
-  function openNew() { setEditing(null); reset({}); setModalOpen(true); }
+  function openNew() { setEditing(null); reset({ sector: '', customSector: '' }); setModalOpen(true); }
 
   function openEdit(c: Client) {
+    const sector = c.sector ?? '';
+    const isKnownSector = !sector || SECTORS.includes(sector);
     setEditing(c);
     setValue('name', c.name); setValue('nif', c.nif ?? '');
     setValue('email', c.email ?? ''); setValue('phone', c.phone ?? '');
-    setValue('address', c.address ?? ''); setValue('sector', c.sector ?? '');
+    setValue('address', c.address ?? '');
+    setValue('sector', isKnownSector ? sector : CUSTOM_SECTOR_VALUE);
+    setValue('customSector', isKnownSector ? '' : sector);
     setModalOpen(true);
   }
 
-  function closeModal() { setModalOpen(false); setEditing(null); reset({}); }
+  function closeModal() { setModalOpen(false); setEditing(null); reset({ sector: '', customSector: '' }); }
+
+  function saveClient(data: ClientForm & { customSector?: string }) {
+    const sector = data.sector === CUSTOM_SECTOR_VALUE ? data.customSector?.trim() : data.sector;
+    if (data.sector === CUSTOM_SECTOR_VALUE && !sector) {
+      toast.error('Indique o novo setor');
+      return;
+    }
+
+    const { customSector: _customSector, ...payload } = data;
+    saveMutation.mutate({ ...payload, sector: sector || undefined });
+  }
 
   function openInvite(c: Client) {
     setInviteClient(c);
@@ -198,7 +215,7 @@ export default function ClientsPage() {
 
       {/* Modal criar/editar cliente */}
       <Modal open={modalOpen} onClose={closeModal} title={editing ? 'Editar Cliente' : 'Novo Cliente'}>
-        <form onSubmit={handleSubmit(d => saveMutation.mutate(d))} className="space-y-4">
+        <form onSubmit={handleSubmit(saveClient)} className="space-y-4">
           <Input label="Nome *" placeholder="Nome da empresa" error={errors.name?.message}
             {...register('name', { required: 'Nome obrigatório' })} />
           <div className="grid grid-cols-2 gap-3">
@@ -213,8 +230,16 @@ export default function ClientsPage() {
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">Selecionar setor</option>
               {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value={CUSTOM_SECTOR_VALUE}>Outro / criar novo</option>
             </select>
           </div>
+          {selectedSector === CUSTOM_SECTOR_VALUE && (
+            <Input
+              label="Novo setor *"
+              placeholder="Ex: Padaria, Talho, Catering..."
+              {...register('customSector')}
+            />
+          )}
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="secondary" onClick={closeModal}>Cancelar</Button>
             <Button type="submit" loading={saveMutation.isPending}>{editing ? 'Guardar' : 'Criar Cliente'}</Button>

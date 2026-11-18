@@ -1,5 +1,5 @@
 {
-  "packageId": "pt.cafemartins.patakus",
+  "packageId": "pt.patakus.patakus",
   "host": "patakus.cafemartins.pt",
   "name": "Patakus Operador",
   "launcherName": "Patakus",
@@ -16,8 +16,8 @@
   "iconUrl": "https://patakus.cafemartins.pt/icons/icon-512.png",
   "maskableIconUrl": "https://patakus.cafemartins.pt/icons/icon-512.png",
   "monochromeIconUrl": "",
-  "appVersion": "1.0.0",
-  "appVersionCode": 1,
+  "appVersion": "1.0.1",
+  "appVersionCode": 2,
   "signingKey": {
     "path": "./android.keystore",
     "alias": "android"

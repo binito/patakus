@@ -7,3 +7,10 @@ dist
 !.env.example
 .turbo
 build
+.DS_Store
+._*
+*.log
+*.tsbuildinfo
+/backups/
+/.claude/worktrees/
+/twa/core

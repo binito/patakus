@@ -9,8 +9,9 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { Client } from '@/types';
 
-const SECTORS = ['Hotel', 'Restaurante', 'Café', 'Clínica', 'Farmácia', 'Escritório', 'Indústria', 'Outro'];
-const emptyForm = { name: '', nif: '', email: '', phone: '', address: '', sector: '' };
+const SECTORS = ['Hotel', 'Restaurante', 'Café', 'Clínica', 'Farmácia', 'Escritório', 'Indústria'];
+const CUSTOM_SECTOR_VALUE = '__custom__';
+const emptyForm = { name: '', nif: '', email: '', phone: '', address: '', sector: '', customSector: '' };
 
 interface Invitation {
   id: string; email: string | null; expiresAt: string;
@@ -45,7 +46,7 @@ export default function ClientesMobilePage() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data: typeof emptyForm) =>
+    mutationFn: (data: Omit<typeof emptyForm, 'customSector'>) =>
       editing
         ? api.patch(`/clients/${editing.id}`, data).then(r => r.data)
         : api.post('/clients', data).then(r => r.data),
@@ -77,11 +78,37 @@ export default function ClientesMobilePage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/clients/${id}/permanent`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['clients'] });
+      toast.success('Cliente eliminado permanentemente');
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao eliminar cliente'),
+  });
+
+  function deleteClient(client: Client) {
+    if (deleteMutation.isPending) return;
+    if (window.confirm(`Apagar permanentemente "${client.name}"? Esta ação elimina todos os dados associados e não pode ser desfeita.`)) {
+      deleteMutation.mutate(client.id);
+    }
+  }
+
   function openNew() { setEditing(null); setForm(emptyForm); setTab('form'); }
 
   function openEdit(c: Client) {
+    const sector = c.sector ?? '';
+    const isKnownSector = !sector || SECTORS.includes(sector);
     setEditing(c);
-    setForm({ name: c.name, nif: c.nif ?? '', email: c.email ?? '', phone: c.phone ?? '', address: c.address ?? '', sector: c.sector ?? '' });
+    setForm({
+      name: c.name,
+      nif: c.nif ?? '',
+      email: c.email ?? '',
+      phone: c.phone ?? '',
+      address: c.address ?? '',
+      sector: isKnownSector ? sector : CUSTOM_SECTOR_VALUE,
+      customSector: isKnownSector ? '' : sector,
+    });
     setTab('form');
   }
 
@@ -100,7 +127,13 @@ export default function ClientesMobilePage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) { toast.error('Nome obrigatório'); return; }
-    saveMutation.mutate(form);
+    const sector = form.sector === CUSTOM_SECTOR_VALUE ? form.customSector.trim() : form.sector;
+    if (form.sector === CUSTOM_SECTOR_VALUE && !sector) {
+      toast.error('Indique o novo setor');
+      return;
+    }
+    const { customSector: _customSector, ...payload } = form;
+    saveMutation.mutate({ ...payload, sector });
   }
 
   function copyLink() {
@@ -184,6 +217,18 @@ export default function ClientesMobilePage() {
                   </div>
                 </div>
                 {c.address && <p className="text-xs text-gray-400 mt-2">{c.address}</p>}
+                <div className="mt-3 flex justify-end border-t border-gray-100 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteClient(c)}
+                    disabled={deleteMutation.isPending}
+                    aria-label={`Eliminar cliente ${c.name}`}
+                    className="min-h-11 flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-red-600 active:bg-red-50 disabled:opacity-50"
+                  >
+                    <Trash2 size={18} />
+                    {deleteMutation.isPending && deleteMutation.variables === c.id ? 'A eliminar...' : 'Eliminar cliente'}
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -237,8 +282,17 @@ export default function ClientesMobilePage() {
               className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
               <option value="">Selecionar setor...</option>
               {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value={CUSTOM_SECTOR_VALUE}>Outro / criar novo</option>
             </select>
           </div>
+          {form.sector === CUSTOM_SECTOR_VALUE && (
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Novo setor *</label>
+              <input value={form.customSector} onChange={e => setForm(f => ({ ...f, customSector: e.target.value }))}
+                placeholder="Ex: Padaria, Talho, Catering..."
+                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          )}
           <div className="flex gap-3 pt-2">
             {editing && (
               <button type="button" onClick={closeForm}

@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "pt.cafemartins.patakus",
-    "sha256_cert_fingerprints": ["B2:4B:2C:FA:3C:11:00:5D:28:27:90:B1:BE:01:73:C2:46:EA:B8:D3:3A:C3:97:80:D5:B8:E6:A6:A0:4D:86:F5"]
+    "package_name": "pt.patakus.patakus",
+    "sha256_cert_fingerprints": ["23:E4:C3:A2:92:B6:81:51:63:42:8E:6C:45:D6:BF:07:6C:89:F4:6E:00:01:A5:9C:D3:CC:B6:7C:03:67:16:BC"]
   }
 }]

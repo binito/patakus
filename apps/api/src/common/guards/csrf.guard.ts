@@ -13,6 +13,8 @@ const CSRF_EXEMPT_PATHS = new Set([
   '/auth/login',
   '/auth/refresh',
   '/auth/logout',
+  '/password-resets/validate',
+  '/password-resets/complete',
 ]);
 
 // Double-submit cookie pattern.

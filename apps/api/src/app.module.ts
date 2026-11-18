@@ -26,6 +26,7 @@ import { DesinfecaoModule } from './desinfecao/desinfecao.module';
 import { OleosModule } from './oleos/oleos.module';
 import { SharesModule } from './shares/shares.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { PasswordResetsModule } from './password-resets/password-resets.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { InvitationsModule } from './invitations/invitations.module';
     OleosModule,
     SharesModule,
     InvitationsModule,
+    PasswordResetsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

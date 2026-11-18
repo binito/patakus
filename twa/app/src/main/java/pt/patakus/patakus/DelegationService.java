@@ -1,4 +1,4 @@
-package pt.cafemartins.patakus;
+package pt.patakus.patakus;
 
 
 
@@ -11,4 +11,3 @@ public class DelegationService extends
         
     }
 }
-

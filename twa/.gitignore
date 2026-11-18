@@ -1,6 +1,8 @@
 .gradle/
 build/
 app/build/
+local.properties
+signing.properties
 android.keystore
 *.apk
 *.aab

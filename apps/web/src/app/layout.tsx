@@ -1,9 +1,6 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Patakus',
@@ -30,7 +27,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-PT">
-      <body className={inter.className}>
+      <body>
         <Providers>{children}</Providers>
         <script dangerouslySetInnerHTML={{
           __html: `if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');`

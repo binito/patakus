@@ -12,6 +12,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/lib/api';
 import { User, Client } from '@/types';
+import { PasswordResetLink } from '@/components/PasswordResetLink';
 
 interface Invitation {
   id: string;
@@ -193,6 +194,7 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
+                  <PasswordResetLink user={u} />
                   {u.id !== me?.id && u.active && (
                     <button onClick={() => { if (confirm(`Desativar ${u.name}?`)) deactivateMutation.mutate(u.id); }}
                       className="rounded p-1.5 text-gray-300 hover:bg-orange-50 hover:text-orange-500"

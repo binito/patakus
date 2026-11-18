@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { User, Client } from '@/types';
+import { PasswordResetLink } from '@/components/PasswordResetLink';
 
 interface Invitation {
   id: string;
@@ -242,6 +243,9 @@ export default function UtilizadoresMobilePage() {
                       </>
                     )}
                   </div>
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <PasswordResetLink user={u} />
                 </div>
               </div>
             ))

@@ -20,6 +20,7 @@ const USER_SELECT = {
   active: true,
   clientId: true,
   createdAt: true,
+  oauthAccounts: { select: { provider: true } },
 } as const;
 
 const BCRYPT_ROUNDS = 12;

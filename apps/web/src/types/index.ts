@@ -9,6 +9,7 @@ export interface User {
   active: boolean;
   clientId?: string;
   createdAt: string;
+  oauthAccounts?: { provider: string }[];
 }
 
 export interface Client {
